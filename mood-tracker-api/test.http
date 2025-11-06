@@ -1,0 +1,21 @@
+### GET: すべてのデータを取得
+GET http://localhost:3000/api/test
+
+### POST: 新しいデータを追加
+POST http://localhost:3000/api/test
+Content-Type: application/json
+
+{
+  "name": "REST Clientからのテスト"
+}
+
+### PUT: データを更新（idは実際に存在するものに変更してください）
+PUT http://localhost:3000/api/test/1
+Content-Type: application/json
+
+{
+  "name": "更新されたデータ"
+}
+
+### DELETE: データを削除（idは実際に存在するものに変更してください）
+DELETE http://localhost:3000/api/test/2
