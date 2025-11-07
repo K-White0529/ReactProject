@@ -4,7 +4,8 @@ import {
   HiX,
   HiPlus,
   HiChartBar,
-  HiUser
+  HiUser,
+  HiHome
 } from 'react-icons/hi';
 
 interface SidebarProps {
@@ -13,14 +14,15 @@ interface SidebarProps {
   onLogout: () => void;
   isMobile: boolean;
   onClose?: () => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
-function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose }: SidebarProps) {
+function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage, onNavigate }: SidebarProps) {
   const user = getStoredUser();
 
   const handleNavigation = (path: string) => {
-    // 将来的にルーティングを実装する際に使用
-    console.log('Navigate to:', path);
+    onNavigate(path);
     if (isMobile && onClose) {
       onClose();
     }
@@ -58,8 +60,17 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose }: SidebarPro
       {/* ナビゲーションメニュー */}
       <nav className="sidebar-nav">
         <button
-          className="nav-item"
-          onClick={() => handleNavigation('/record')}
+          className={`nav-item ${currentPage === 'dashboard' ? 'active' : ''}`}
+          onClick={() => handleNavigation('dashboard')}
+          title="ダッシュボード"
+        >
+          <HiHome size={24} className="nav-icon" />
+          {expanded && <span className="nav-label">ダッシュボード</span>}
+        </button>
+
+        <button
+          className={`nav-item ${currentPage === 'record' ? 'active' : ''}`}
+          onClick={() => handleNavigation('record')}
           title="データ登録"
         >
           <HiPlus size={24} className="nav-icon" />
@@ -67,8 +78,8 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose }: SidebarPro
         </button>
 
         <button
-          className="nav-item"
-          onClick={() => handleNavigation('/analysis')}
+          className={`nav-item ${currentPage === 'analysis' ? 'active' : ''}`}
+          onClick={() => handleNavigation('analysis')}
           title="分析"
         >
           <HiChartBar size={24} className="nav-icon" />

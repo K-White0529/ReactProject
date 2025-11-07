@@ -7,9 +7,11 @@ import './Layout.css';
 interface LayoutProps {
   children: ReactNode;
   onLogout: () => void;
+  currentPage: string;
+  onNavigate: (page: string) => void;
 }
 
-function Layout({ children, onLogout }: LayoutProps) {
+function Layout({ children, onLogout, currentPage, onNavigate }: LayoutProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -33,6 +35,8 @@ function Layout({ children, onLogout }: LayoutProps) {
         onToggle={toggleSidebar}
         onLogout={onLogout}
         isMobile={false}
+        currentPage={currentPage}
+        onNavigate={onNavigate}
       />
 
       {/* スマホ用ヘッダー */}
@@ -47,6 +51,8 @@ function Layout({ children, onLogout }: LayoutProps) {
             onLogout={onLogout}
             isMobile={true}
             onClose={closeMobileSidebar}
+            currentPage={currentPage}
+            onNavigate={onNavigate}
           />
         </>
       )}
