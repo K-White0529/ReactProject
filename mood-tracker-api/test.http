@@ -1,21 +1,58 @@
-### GET: すべてのデータを取得
-GET http://localhost:3000/api/test
-
-### POST: 新しいデータを追加
-POST http://localhost:3000/api/test
+### ユーザー登録
+POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "name": "REST Clientからのテスト"
+  "username": "testuser2",
+  "email": "test2@example.com",
+  "password": "password123"
 }
 
-### PUT: データを更新（idは実際に存在するものに変更してください）
-PUT http://localhost:3000/api/test/1
+### ログイン
+POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "name": "更新されたデータ"
+  "username": "testuser2",
+  "password": "password123"
 }
 
-### DELETE: データを削除（idは実際に存在するものに変更してください）
-DELETE http://localhost:3000/api/test/2
+### 現在のユーザー情報取得（上記ログインで取得したトークンを使用）
+GET http://localhost:3000/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
+
+### 記録一覧取得（トークンが必要）
+GET http://localhost:3000/api/records
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
+
+### 記録作成（トークンが必要）
+POST http://localhost:3000/api/records
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
+
+{
+  "sleep_hours": 7.5,
+  "sleep_quality": 8,
+  "meal_quality": 7,
+  "meal_regularity": 8,
+  "exercise_minutes": 30,
+  "exercise_intensity": 6,
+  "emotion_score": 8,
+  "emotion_note": "今日は気分が良い",
+  "motivation_score": 7,
+  "activities_done": "プロジェクトのドキュメントを作成した"
+}
+
+### 記録更新（IDとトークンが必要）
+PUT http://localhost:3000/api/records/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
+
+{
+  "emotion_score": 9,
+  "emotion_note": "気分がさらに良くなった"
+}
+
+### 記録削除（IDとトークンが必要）
+DELETE http://localhost:3000/api/records/2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0

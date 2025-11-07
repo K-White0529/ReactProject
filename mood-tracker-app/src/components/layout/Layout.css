@@ -1,0 +1,305 @@
+/* レイアウト全体 */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: transparent;
+}
+
+/* メインコンテンツ */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  transition: margin-left 0.3s ease;
+  margin-left: 80px; /* collapsed sidebar width */
+  background: transparent;
+}
+
+.main-content.sidebar-expanded {
+  margin-left: 260px; /* expanded sidebar width */
+}
+
+/* サイドバー */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  background: white;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar.expanded {
+  width: 260px;
+}
+
+/* サイドバーヘッダー */
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid #F0F0F0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 70px;
+}
+
+.sidebar-toggle,
+.sidebar-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #FF6B9D;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-toggle:hover,
+.sidebar-close:hover {
+  background-color: #FFF0F5;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.app-icon {
+  font-size: 2rem;
+}
+
+.app-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FF6B9D;
+}
+
+/* ナビゲーションメニュー */
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #555;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background-color: #FFF0F5;
+  color: #FF6B9D;
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  color: #FF6B9D;
+}
+
+.nav-label {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.875rem;
+}
+
+/* ユーザーメニュー */
+.sidebar-user {
+  padding: 1rem 0.5rem;
+  border-top: 1px solid #F0F0F0;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.user-menu:hover {
+  background-color: #F0E6FF;
+}
+
+.user-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #B4A7D6 0%, #D4C5F9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.user-info {
+  flex: 1;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.user-action {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.sidebar.collapsed .user-menu {
+  justify-content: center;
+  padding: 0.875rem;
+}
+
+/* モバイルヘッダー */
+.mobile-header {
+  display: none;
+}
+
+/* モバイル用オーバーレイ */
+.mobile-overlay {
+  display: none;
+}
+
+/* レスポンシブ: タブレット以下 */
+@media (max-width: 768px) {
+  /* メインコンテンツをフル幅に */
+  .main-content {
+    margin-left: 0 !important;
+    padding: 1rem;
+    padding-top: 80px; /* ヘッダーの高さ分 */
+  }
+
+  /* PC用サイドバーを非表示 */
+  .sidebar:not(.mobile) {
+    display: none;
+  }
+
+  /* モバイルヘッダーを表示 */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 0 1rem;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+  }
+
+  .mobile-menu-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #FF6B9D;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-menu-button:hover {
+    background-color: #FFF0F5;
+  }
+
+  .mobile-app-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mobile-app-logo .app-icon {
+    font-size: 1.75rem;
+  }
+
+  .mobile-app-logo .app-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #FF6B9D;
+  }
+
+  /* モバイル用サイドバー */
+  .sidebar.mobile {
+    display: flex;
+    width: 260px;
+    animation: slideInFromLeft 0.3s ease-out;
+  }
+
+  .sidebar.mobile .sidebar-header {
+    justify-content: space-between;
+  }
+
+  /* モバイル用オーバーレイ */
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.3s ease-out;
+  }
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
