@@ -19,16 +19,16 @@ Content-Type: application/json
 
 ### 現在のユーザー情報取得（上記ログインで取得したトークンを使用）
 GET http://localhost:3000/api/auth/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDc4ODg0LCJleHAiOjE3NjMwODM2ODR9.Fe_lGk0mDFDafzYJpK-lSocrn4Pg62eMIxX4y-vAjTc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
 
 ### 記録一覧取得（トークンが必要）
 GET http://localhost:3000/api/records
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDc4ODg0LCJleHAiOjE3NjMwODM2ODR9.Fe_lGk0mDFDafzYJpK-lSocrn4Pg62eMIxX4y-vAjTc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
 
 ### 記録作成（トークンが必要）
 POST http://localhost:3000/api/records
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDc4ODg0LCJleHAiOjE3NjMwODM2ODR9.Fe_lGk0mDFDafzYJpK-lSocrn4Pg62eMIxX4y-vAjTc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
 
 {
   "sleep_hours": 7.5,
@@ -46,7 +46,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZ
 ### 記録更新（IDとトークンが必要）
 PUT http://localhost:3000/api/records/2
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDc4ODg0LCJleHAiOjE3NjMwODM2ODR9.Fe_lGk0mDFDafzYJpK-lSocrn4Pg62eMIxX4y-vAjTc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0
 
 {
   "emotion_score": 9,
@@ -55,4 +55,4 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZ
 
 ### 記録削除（IDとトークンが必要）
 DELETE http://localhost:3000/api/records/2
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDc4ODg0LCJleHAiOjE3NjMwODM2ODR9.Fe_lGk0mDFDafzYJpK-lSocrn4Pg62eMIxX4y-vAjTc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsInVzZXJuYW1lIjoidGVzdHVzZXIyIiwiaWF0IjoxNzYyNDgxMDI3LCJleHAiOjE3NjMwODU4Mjd9.PTa_gEYU7F55i4HEWdZNr5a-y_oho5E0cUO7UITt8j0

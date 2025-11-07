@@ -1,47 +1,36 @@
-import { useState, useEffect } from 'react'
-import './App.css'
-
-type CounterButtonProps = {
-  label: string
-  onClick: () => void
-}
-
-function CounterButton(props: CounterButtonProps) {
-  return (
-    <button onClick={props.onClick}>
-      {props.label}
-    </button>
-  )
-}
+import { useState, useEffect } from 'react';
+import './App.css';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import Layout from './components/layout/Layout';
+import { isAuthenticated } from './services/authService';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [authenticated, setAuthenticated] = useState<boolean>(false);
 
-  // countが変更されるたびに実行される
   useEffect(() => {
-    console.log(`カウントが ${count} に変更されました`)
-  }, [count])
+    setAuthenticated(isAuthenticated());
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setAuthenticated(false);
+  };
 
   return (
     <div className="App">
-      <h1>カウンターアプリ</h1>
-      <div className="card">
-        <p>現在のカウント: {count}</p>
-        <CounterButton
-          label="+1"
-          onClick={() => setCount(count + 1)}
-        />
-        <CounterButton
-          label="-1"
-          onClick={() => setCount(count - 1)}
-        />
-        <CounterButton
-          label="リセット"
-          onClick={() => setCount(0)}
-        />
-      </div>
+      {authenticated ? (
+        <Layout onLogout={handleLogout}>
+          <Dashboard />
+        </Layout>
+      ) : (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
