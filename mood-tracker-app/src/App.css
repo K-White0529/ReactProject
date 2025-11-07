@@ -151,60 +151,6 @@ body {
   text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
 }
 
-/* 記録一覧 */
-.records-list {
-  margin-top: 2rem;
-}
-
-.records-list h2 {
-  color: #333;
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-}
-
-.record-item {
-  padding: 1.75rem;
-  margin-bottom: 1.25rem;
-  border-radius: 16px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
-  border: none;
-}
-
-.record-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.record-item h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #FF6B9D;
-  font-size: 1.25rem;
-  font-weight: 600;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #FFF0F5;
-}
-
-.record-item p {
-  margin: 0.75rem 0;
-  color: #333;
-  line-height: 1.7;
-  font-size: 0.95rem;
-}
-
-.record-item p:last-child {
-  margin-bottom: 0;
-}
-
-/* 記録データのラベル */
-.record-item p strong {
-  color: #FF6B9D;
-  font-weight: 600;
-}
-
 /* 空の状態 */
 .empty-state {
   text-align: center;

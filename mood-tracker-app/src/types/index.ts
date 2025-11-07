@@ -98,3 +98,12 @@ export interface AnalysisAnswerInput {
   question_id: number;
   answer_score: number;
 }
+
+// 統計情報の型
+export interface RecordStats {
+  total_records: number;
+  this_week_records: number;
+  avg_emotion_score?: number;
+  avg_motivation_score?: number;
+  latest_record_date?: string;
+}

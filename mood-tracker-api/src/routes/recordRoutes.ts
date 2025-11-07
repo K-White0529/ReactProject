@@ -4,7 +4,8 @@ import {
   getRecordById,
   createRecord,
   updateRecord,
-  deleteRecord
+  deleteRecord,
+  getRecordStats
 } from '../controllers/recordController';
 import { authenticateToken } from '../middleware/auth';
 import { recordValidation, validate } from '../middleware/validation';
@@ -13,6 +14,9 @@ const router = Router();
 
 // すべてのルートで認証が必要
 router.use(authenticateToken);
+
+// GET /api/records/stats - 統計情報取得
+router.get('/stats', getRecordStats);
 
 // GET /api/records - 記録一覧取得
 router.get('/', getRecords);

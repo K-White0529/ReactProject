@@ -125,4 +125,22 @@ export class RecordModel {
     );
     return result.rowCount !== null && result.rowCount > 0;
   }
+
+  /**
+   * 統計情報を取得
+   */
+  static async getStats(userId: number): Promise<any> {
+    const result = await pool.query(
+      `SELECT
+        COUNT(*) as total_records,
+        COUNT(CASE WHEN recorded_at >= NOW() - INTERVAL '7 days' THEN 1 END) as this_week_records,
+        ROUND(AVG(emotion_score), 1) as avg_emotion_score,
+        ROUND(AVG(motivation_score), 1) as avg_motivation_score,
+        MAX(recorded_at) as latest_record_date
+       FROM records
+       WHERE user_id = $1`,
+      [userId]
+    );
+    return result.rows[0];
+  }
 }

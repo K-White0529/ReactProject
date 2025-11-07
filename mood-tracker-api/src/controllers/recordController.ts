@@ -183,3 +183,33 @@ export async function deleteRecord(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
+/**
+ * 統計情報を取得
+ */
+export async function getRecordStats(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: '認証が必要です'
+      });
+      return;
+    }
+
+    const stats = await RecordModel.getStats(userId);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('統計情報取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: '統計情報の取得に失敗しました'
+    });
+  }
+}

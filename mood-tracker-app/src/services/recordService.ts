@@ -1,5 +1,5 @@
 import api from './api';
-import type { Record, RecordInput, ApiResponse } from '../types';
+import type { Record, RecordInput, RecordStats, ApiResponse } from '../types';
 
 /**
  * 記録一覧を取得
@@ -62,4 +62,17 @@ export async function deleteRecord(id: number): Promise<void> {
   if (!response.data.success) {
     throw new Error(response.data.message || '記録の削除に失敗しました');
   }
+}
+
+export async function getRecordStats(): Promise<RecordStats> {
+  const response = await api.get<ApiResponse<RecordStats>>('/api/records/stats');
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return {
+    total_records: 0,
+    this_week_records: 0
+  };
 }

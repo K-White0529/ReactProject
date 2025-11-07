@@ -17,6 +17,8 @@ export interface AnalysisQuestion {
   is_active: boolean;
   generated_by_ai: boolean;
   usage_count: number;
+  category_name?: string;
+  category_code?: string;
 }
 
 // 回答の型
