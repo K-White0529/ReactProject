@@ -3,6 +3,7 @@ import './App.css';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import RecordForm from './components/RecordForm';
+import AnalysisForm from './components/AnalysisForm';
 import Layout from './components/layout/Layout';
 import { isAuthenticated } from './services/authService';
 
@@ -34,7 +35,7 @@ function App() {
       case 'record':
         return <RecordForm />;
       case 'analysis':
-        return <div className="page-placeholder">分析画面は次のステップで実装します</div>;
+        return <AnalysisForm />;
       default:
         return <Dashboard />;
     }

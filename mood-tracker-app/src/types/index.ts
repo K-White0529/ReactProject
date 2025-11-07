@@ -61,3 +61,40 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   error?: string;
 }
+
+// 分析観点の型
+export interface AnalysisCategory {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+}
+
+// 質問の型
+export interface AnalysisQuestion {
+  id: number;
+  category_id: number;
+  question_text: string;
+  is_active: boolean;
+  generated_by_ai: boolean;
+  usage_count: number;
+  category_name?: string;
+  category_code?: string;
+}
+
+// 回答の型
+export interface AnalysisAnswer {
+  id?: number;
+  user_id?: number;
+  record_id?: number;
+  question_id: number;
+  answer_score: number;
+  answered_at?: string;
+}
+
+// 回答入力用の型
+export interface AnalysisAnswerInput {
+  record_id?: number;
+  question_id: number;
+  answer_score: number;
+}
