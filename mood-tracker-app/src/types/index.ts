@@ -122,3 +122,10 @@ export interface ChartData {
   mood: ChartDataPoint[];
   weather: ChartDataPoint[];
 }
+
+export interface CurrentWeather {
+  temperature: number;
+  humidity: number;
+  weatherCondition: string;
+  location: string;
+}

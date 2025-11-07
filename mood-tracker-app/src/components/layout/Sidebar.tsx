@@ -5,7 +5,8 @@ import {
   HiPlus,
   HiChartBar,
   HiUser,
-  HiHome
+  HiHome,
+  HiViewList
 } from 'react-icons/hi';
 
 interface SidebarProps {
@@ -21,8 +22,8 @@ interface SidebarProps {
 function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage, onNavigate }: SidebarProps) {
   const user = getStoredUser();
 
-  const handleNavigation = (path: string) => {
-    onNavigate(path);
+  const handleNavigation = (page: string) => {
+    onNavigate(page);
     if (isMobile && onClose) {
       onClose();
     }
@@ -33,6 +34,13 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage,
     if (isMobile && onClose) {
       onClose();
     }
+  };
+
+  const isActive = (page: string) => {
+    if (currentPage.startsWith('record-detail')) {
+      return page === 'record-list';
+    }
+    return currentPage === page;
   };
 
   return (
@@ -84,6 +92,15 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage,
         >
           <HiChartBar size={24} className="nav-icon" />
           {expanded && <span className="nav-label">分析</span>}
+        </button>
+
+        <button
+          className={`nav-item ${isActive('record-list') ? 'active' : ''}`}
+          onClick={() => handleNavigation('record-list')}
+          title="記録一覧"
+        >
+          <HiViewList size={24} className="nav-icon" />
+          {expanded && <span className="nav-label">記録一覧</span>}
         </button>
       </nav>
 

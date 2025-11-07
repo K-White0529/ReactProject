@@ -224,6 +224,16 @@
   font-size: 1.3rem;
 }
 
+.record-card.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.record-card.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .charts-section {

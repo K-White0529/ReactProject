@@ -205,6 +205,49 @@
   font-size: 1.1rem;
 }
 
+.weather-info-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.weather-icon-large {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.weather-details {
+  flex: 1;
+}
+
+.weather-location {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.weather-condition {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.weather-metrics {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.weather-metric {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .record-form-container {
@@ -257,6 +300,23 @@
   .form-group textarea {
     padding: 0.75rem;
     font-size: 0.95rem;
+  }
+  .weather-info-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+  }
+
+  .weather-icon-large {
+    font-size: 3rem;
+  }
+
+  .weather-condition {
+    font-size: 1.25rem;
+  }
+
+  .weather-metrics {
+    justify-content: center;
   }
 }
 
