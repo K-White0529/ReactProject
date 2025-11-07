@@ -107,3 +107,18 @@ export interface RecordStats {
   avg_motivation_score?: number;
   latest_record_date?: string;
 }
+
+// グラフデータの型
+export interface ChartDataPoint {
+  date: string;
+  avg_emotion?: number;
+  avg_motivation?: number;
+  avg_temperature?: number;
+  avg_humidity?: number;
+  weather_condition?: string;
+}
+
+export interface ChartData {
+  mood: ChartDataPoint[];
+  weather: ChartDataPoint[];
+}

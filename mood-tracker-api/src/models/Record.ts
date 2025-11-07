@@ -143,4 +143,95 @@ export class RecordModel {
     );
     return result.rows[0];
   }
+
+  /**
+   * グラフ用のデータを取得（直近1週間または最大10件）
+   */
+  static async getChartData(userId: number) {
+    // 直近1週間のデータを取得
+    const weekResult = await pool.query(
+      `SELECT
+        DATE(recorded_at) as date,
+        ROUND(AVG(emotion_score), 1) as avg_emotion,
+        ROUND(AVG(motivation_score), 1) as avg_motivation
+       FROM records
+       WHERE user_id = $1
+         AND recorded_at >= NOW() - INTERVAL '7 days'
+       GROUP BY DATE(recorded_at)
+       ORDER BY date DESC`,
+      [userId]
+    );
+
+    // 1週間分のデータがない場合は最大10件取得
+    if (weekResult.rows.length < 7) {
+      const limitResult = await pool.query(
+        `SELECT
+          DATE(recorded_at) as date,
+          ROUND(AVG(emotion_score), 1) as avg_emotion,
+          ROUND(AVG(motivation_score), 1) as avg_motivation
+         FROM records
+         WHERE user_id = $1
+         GROUP BY DATE(recorded_at)
+         ORDER BY date DESC
+         LIMIT 10`,
+        [userId]
+      );
+      return limitResult.rows.reverse();
+    }
+
+    return weekResult.rows.reverse();
+  }
+
+  /**
+   * 気象データを含むグラフデータを取得（記録がある日付のみ）
+   */
+  static async getWeatherChartData(userId: number) {
+    try {
+      // 直近1週間のデータを取得（recordsテーブルにデータがある日付のみ）
+      const weekResult = await pool.query(
+        `SELECT
+          DATE(r.recorded_at) as date,
+          ROUND(AVG(w.temperature)::numeric, 1) as avg_temperature,
+          ROUND(AVG(w.humidity)::numeric, 1) as avg_humidity,
+          MAX(w.weather_condition) as weather_condition
+         FROM records r
+         LEFT JOIN weather_data w ON DATE(r.recorded_at) = DATE(w.recorded_at)
+           AND r.user_id = w.user_id
+         WHERE r.user_id = $1
+           AND r.recorded_at >= NOW() - INTERVAL '7 days'
+         GROUP BY DATE(r.recorded_at)
+         ORDER BY date ASC`,
+        [userId]
+      );
+
+      console.log('Week weather data (with records):', weekResult.rows);
+
+      // 1週間分のデータがない場合は最大10件取得
+      if (weekResult.rows.length < 7) {
+        const limitResult = await pool.query(
+          `SELECT
+            DATE(r.recorded_at) as date,
+            ROUND(AVG(w.temperature)::numeric, 1) as avg_temperature,
+            ROUND(AVG(w.humidity)::numeric, 1) as avg_humidity,
+            MAX(w.weather_condition) as weather_condition
+           FROM records r
+           LEFT JOIN weather_data w ON DATE(r.recorded_at) = DATE(w.recorded_at)
+             AND r.user_id = w.user_id
+           WHERE r.user_id = $1
+           GROUP BY DATE(r.recorded_at)
+           ORDER BY date DESC
+           LIMIT 10`,
+          [userId]
+        );
+
+        console.log('Limited weather data (with records):', limitResult.rows);
+        return limitResult.rows.reverse();
+      }
+
+      return weekResult.rows;
+    } catch (error) {
+      console.error('Weather chart data error:', error);
+      return [];
+    }
+  }
 }

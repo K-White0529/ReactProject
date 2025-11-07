@@ -1,5 +1,5 @@
 import api from './api';
-import type { Record, RecordInput, RecordStats, ApiResponse } from '../types';
+import type { Record, RecordInput, RecordStats, ChartData, ApiResponse } from '../types';
 
 /**
  * 記録一覧を取得
@@ -74,5 +74,21 @@ export async function getRecordStats(): Promise<RecordStats> {
   return {
     total_records: 0,
     this_week_records: 0
+  };
+}
+
+/**
+ * グラフ用のデータを取得
+ */
+export async function getChartData(): Promise<ChartData> {
+  const response = await api.get<ApiResponse<ChartData>>('/api/records/chart');
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return {
+    mood: [],
+    weather: []
   };
 }

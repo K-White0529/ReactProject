@@ -213,3 +213,39 @@ export async function getRecordStats(req: Request, res: Response): Promise<void>
     });
   }
 }
+
+/**
+ * グラフ用のデータを取得
+ */
+export async function getChartData(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: '認証が必要です'
+      });
+      return;
+    }
+
+    const [moodData, weatherData] = await Promise.all([
+      RecordModel.getChartData(userId),
+      RecordModel.getWeatherChartData(userId)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        mood: moodData,
+        weather: weatherData
+      }
+    });
+  } catch (error) {
+    console.error('グラフデータ取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'グラフデータの取得に失敗しました'
+    });
+  }
+}

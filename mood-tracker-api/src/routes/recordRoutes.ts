@@ -5,7 +5,8 @@ import {
   createRecord,
   updateRecord,
   deleteRecord,
-  getRecordStats
+  getRecordStats,
+  getChartData
 } from '../controllers/recordController';
 import { authenticateToken } from '../middleware/auth';
 import { recordValidation, validate } from '../middleware/validation';
@@ -17,6 +18,9 @@ router.use(authenticateToken);
 
 // GET /api/records/stats - 統計情報取得
 router.get('/stats', getRecordStats);
+
+// GET /api/records/chart - グラフデータ取得
+router.get('/chart', getChartData);
 
 // GET /api/records - 記録一覧取得
 router.get('/', getRecords);

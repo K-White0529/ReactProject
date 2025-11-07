@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { getRecords, getRecordStats } from '../services/recordService';
-import type { Record, RecordStats } from '../types';
+import { getRecords, getRecordStats, getChartData } from '../services/recordService';
+import type { Record, RecordStats, ChartData } from '../types';
 import { HiChartBar, HiCalendar, HiEmojiHappy, HiLightningBolt, HiPlus } from 'react-icons/hi';
+import MoodChart from './charts/MoodChart';
+import WeatherChart from './charts/WeatherChart';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -11,6 +13,7 @@ interface DashboardProps {
 function Dashboard({ onNavigate }: DashboardProps) {
   const [records, setRecords] = useState<Record[]>([]);
   const [stats, setStats] = useState<RecordStats | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
@@ -21,12 +24,14 @@ function Dashboard({ onNavigate }: DashboardProps) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [recordsData, statsData] = await Promise.all([
-        getRecords(10), // 最新10件のみ取得
-        getRecordStats()
+      const [recordsData, statsData, chartDataResult] = await Promise.all([
+        getRecords(10),
+        getRecordStats(),
+        getChartData()
       ]);
       setRecords(recordsData);
       setStats(statsData);
+      setChartData(chartDataResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
     } finally {
@@ -49,6 +54,24 @@ function Dashboard({ onNavigate }: DashboardProps) {
       <h1 className="page-title">ダッシュボード</h1>
 
       {error && <div className="error-message">{error}</div>}
+
+      {/* グラフセクション */}
+      {chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
+        <div className="charts-section">
+          {chartData.mood.length > 0 && (
+            <div className="chart-card">
+              <h3 className="chart-title">気分とモチベーションの推移</h3>
+              <MoodChart data={chartData.mood} />
+            </div>
+          )}
+          {chartData.weather.length > 0 && (
+            <div className="chart-card">
+              <h3 className="chart-title">気温と湿度の推移</h3>
+              <WeatherChart data={chartData.weather} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 統計パネル */}
       <div className="stats-grid">
