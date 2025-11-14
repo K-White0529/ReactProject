@@ -145,90 +145,117 @@ export class RecordModel {
   }
 
   /**
-   * グラフ用のデータを取得（直近1週間または最大10件）
+   * グラフ用のデータを取得
+   * @param userId ユーザーID
+   * @param range 表示範囲 ('today' | '3days' | '1week' | '3weeks')
    */
-  static async getChartData(userId: number) {
-    // 直近1週間のデータを取得
-    const weekResult = await pool.query(
+  static async getChartData(userId: number, range: string = '3weeks') {
+    // 範囲と集約単位の設定
+    let intervalClause: string;
+    let truncExpression: string;
+    let dateFormat: string;
+
+    switch (range) {
+      case 'today':
+        intervalClause = "AND recorded_at >= CURRENT_DATE";
+        // 5分単位
+        truncExpression = "date_trunc('hour', recorded_at) + (EXTRACT(MINUTE FROM recorded_at)::int / 5) * INTERVAL '5 minutes'";
+        dateFormat = 'MM/DD HH24:MI';
+        break;
+      case '3days':
+        intervalClause = "AND recorded_at >= NOW() - INTERVAL '3 days'";
+        // 15分単位
+        truncExpression = "date_trunc('hour', recorded_at) + (EXTRACT(MINUTE FROM recorded_at)::int / 15) * INTERVAL '15 minutes'";
+        dateFormat = 'MM/DD HH24:MI';
+        break;
+      case '1week':
+        intervalClause = "AND recorded_at >= NOW() - INTERVAL '7 days'";
+        // 30分単位
+        truncExpression = "date_trunc('hour', recorded_at) + (EXTRACT(MINUTE FROM recorded_at)::int / 30) * INTERVAL '30 minutes'";
+        dateFormat = 'MM/DD HH24:MI';
+        break;
+      case '3weeks':
+      default:
+        intervalClause = "AND recorded_at >= NOW() - INTERVAL '21 days'";
+        // 1時間単位
+        truncExpression = "date_trunc('hour', recorded_at)";
+        dateFormat = 'MM/DD HH24:00';
+        break;
+    }
+
+    const result = await pool.query(
       `SELECT
-        DATE(recorded_at) as date,
-        ROUND(AVG(emotion_score), 1) as avg_emotion,
-        ROUND(AVG(motivation_score), 1) as avg_motivation
+        TO_CHAR(${truncExpression}, '${dateFormat}') as date,
+        ROUND(AVG(emotion_score)::numeric, 1) as avg_emotion,
+        ROUND(AVG(motivation_score)::numeric, 1) as avg_motivation
        FROM records
        WHERE user_id = $1
-         AND recorded_at >= NOW() - INTERVAL '7 days'
-       GROUP BY DATE(recorded_at)
-       ORDER BY date DESC`,
+         ${intervalClause}
+       GROUP BY ${truncExpression}
+       ORDER BY ${truncExpression} ASC`,
       [userId]
     );
 
-    // 1週間分のデータがない場合は最大10件取得
-    if (weekResult.rows.length < 7) {
-      const limitResult = await pool.query(
-        `SELECT
-          DATE(recorded_at) as date,
-          ROUND(AVG(emotion_score), 1) as avg_emotion,
-          ROUND(AVG(motivation_score), 1) as avg_motivation
-         FROM records
-         WHERE user_id = $1
-         GROUP BY DATE(recorded_at)
-         ORDER BY date DESC
-         LIMIT 10`,
-        [userId]
-      );
-      return limitResult.rows.reverse();
-    }
-
-    return weekResult.rows.reverse();
+    return result.rows;
   }
 
   /**
    * 気象データを含むグラフデータを取得（記録がある日付のみ）
+   * @param userId ユーザーID
+   * @param range 表示範囲 ('today' | '3days' | '1week' | '3weeks')
    */
-  static async getWeatherChartData(userId: number) {
+  static async getWeatherChartData(userId: number, range: string = '3weeks') {
     try {
-      // 直近1週間のデータを取得（recordsテーブルにデータがある日付のみ）
-      const weekResult = await pool.query(
+      // 範囲と集約単位の設定
+      let intervalClause: string;
+      let truncExpression: string;
+      let dateFormat: string;
+
+      switch (range) {
+        case 'today':
+          intervalClause = "AND r.recorded_at >= CURRENT_DATE";
+          // 5分単位
+          truncExpression = "date_trunc('hour', r.recorded_at) + (EXTRACT(MINUTE FROM r.recorded_at)::int / 5) * INTERVAL '5 minutes'";
+          dateFormat = 'MM/DD HH24:MI';
+          break;
+        case '3days':
+          intervalClause = "AND r.recorded_at >= NOW() - INTERVAL '3 days'";
+          // 15分単位
+          truncExpression = "date_trunc('hour', r.recorded_at) + (EXTRACT(MINUTE FROM r.recorded_at)::int / 15) * INTERVAL '15 minutes'";
+          dateFormat = 'MM/DD HH24:MI';
+          break;
+        case '1week':
+          intervalClause = "AND r.recorded_at >= NOW() - INTERVAL '7 days'";
+          // 30分単位
+          truncExpression = "date_trunc('hour', r.recorded_at) + (EXTRACT(MINUTE FROM r.recorded_at)::int / 30) * INTERVAL '30 minutes'";
+          dateFormat = 'MM/DD HH24:MI';
+          break;
+        case '3weeks':
+        default:
+          intervalClause = "AND r.recorded_at >= NOW() - INTERVAL '21 days'";
+          // 1時間単位
+          truncExpression = "date_trunc('hour', r.recorded_at)";
+          dateFormat = 'MM/DD HH24:00';
+          break;
+      }
+
+      const result = await pool.query(
         `SELECT
-          DATE(r.recorded_at) as date,
+          TO_CHAR(${truncExpression}, '${dateFormat}') as date,
           ROUND(AVG(w.temperature)::numeric, 1) as avg_temperature,
           ROUND(AVG(w.humidity)::numeric, 1) as avg_humidity,
-          MAX(w.weather_condition) as weather_condition
+          MODE() WITHIN GROUP (ORDER BY w.weather_condition) as weather_condition
          FROM records r
          LEFT JOIN weather_data w ON DATE(r.recorded_at) = DATE(w.recorded_at)
            AND r.user_id = w.user_id
          WHERE r.user_id = $1
-           AND r.recorded_at >= NOW() - INTERVAL '7 days'
-         GROUP BY DATE(r.recorded_at)
-         ORDER BY date ASC`,
+           ${intervalClause}
+         GROUP BY ${truncExpression}
+         ORDER BY ${truncExpression} ASC`,
         [userId]
       );
 
-      console.log('Week weather data (with records):', weekResult.rows);
-
-      // 1週間分のデータがない場合は最大10件取得
-      if (weekResult.rows.length < 7) {
-        const limitResult = await pool.query(
-          `SELECT
-            DATE(r.recorded_at) as date,
-            ROUND(AVG(w.temperature)::numeric, 1) as avg_temperature,
-            ROUND(AVG(w.humidity)::numeric, 1) as avg_humidity,
-            MAX(w.weather_condition) as weather_condition
-           FROM records r
-           LEFT JOIN weather_data w ON DATE(r.recorded_at) = DATE(w.recorded_at)
-             AND r.user_id = w.user_id
-           WHERE r.user_id = $1
-           GROUP BY DATE(r.recorded_at)
-           ORDER BY date DESC
-           LIMIT 10`,
-          [userId]
-        );
-
-        console.log('Limited weather data (with records):', limitResult.rows);
-        return limitResult.rows.reverse();
-      }
-
-      return weekResult.rows;
+      return result.rows;
     } catch (error) {
       console.error('Weather chart data error:', error);
       return [];

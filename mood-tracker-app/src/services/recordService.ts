@@ -79,9 +79,10 @@ export async function getRecordStats(): Promise<RecordStats> {
 
 /**
  * グラフ用のデータを取得
+ * @param range 表示範囲 ('today' | '3days' | '1week' | '3weeks')
  */
-export async function getChartData(): Promise<ChartData> {
-  const response = await api.get<ApiResponse<ChartData>>('/api/records/chart');
+export async function getChartData(range: string = '3weeks'): Promise<ChartData> {
+  const response = await api.get<ApiResponse<ChartData>>(`/api/records/chart?range=${range}`);
 
   if (response.data.success && response.data.data) {
     return response.data.data;

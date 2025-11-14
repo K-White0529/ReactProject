@@ -16,10 +16,11 @@ function Dashboard({ onNavigate }: DashboardProps) {
 	const [chartData, setChartData] = useState<ChartData | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string>('');
+	const [chartRange, setChartRange] = useState<string>('3weeks');
 
 	useEffect(() => {
 		loadData();
-	}, []);
+	}, [chartRange]);
 
 	const loadData = async () => {
 		try {
@@ -27,7 +28,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			const [recordsData, statsData, chartDataResult] = await Promise.all([
 				getRecords(10),
 				getRecordStats(),
-				getChartData()
+				getChartData(chartRange)
 			]);
 			setRecords(recordsData);
 			setStats(statsData);
@@ -60,6 +61,24 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			<h1 className="page-title">ダッシュボード</h1>
 
 			{error && <div className="error-message">{error}</div>}
+
+			{/* グラフ範囲選択 */}
+			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
+				<div className="chart-range-selector">
+					<label htmlFor="chart-range">表示範囲：</label>
+					<select 
+						id="chart-range"
+						value={chartRange} 
+						onChange={(e) => setChartRange(e.target.value)}
+						className="range-select"
+					>
+						<option value="today">今日のデータ</option>
+						<option value="3days">直近3日間</option>
+						<option value="1week">直近1週間</option>
+						<option value="3weeks">直近3週間</option>
+					</select>
+				</div>
+			)}
 
 			{/* グラフセクション */}
 			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (

@@ -111,6 +111,8 @@ export interface RecordStats {
 // グラフデータの型
 export interface ChartDataPoint {
   date: string;
+  hour?: number;
+  recorded_at?: string;
   avg_emotion?: number;
   avg_motivation?: number;
   avg_temperature?: number;
@@ -128,4 +130,5 @@ export interface CurrentWeather {
   humidity: number;
   weatherCondition: string;
   location: string;
+  recordedAt?: string;
 }

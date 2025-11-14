@@ -249,9 +249,12 @@ export async function getChartData(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // クエリパラメータからrangeを取得 (デフォルト: '3weeks')
+    const range = (req.query.range as string) || '3weeks';
+
     const [moodData, weatherData] = await Promise.all([
-      RecordModel.getChartData(userId),
-      RecordModel.getWeatherChartData(userId)
+      RecordModel.getChartData(userId, range),
+      RecordModel.getWeatherChartData(userId, range)
     ]);
 
     res.json({

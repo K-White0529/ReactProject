@@ -29,40 +29,66 @@ interface WeatherChartProps {
 }
 
 function WeatherChart({ data }: WeatherChartProps) {
-  const labels = data.map(d => {
-    const date = new Date(d.date);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  });
+  // データは既に時間単位でグループ化されている (dateフィールドが 'MM/DD HH24:00' 形式)
+  const labels = data.map(d => d.date);
+  const temperatures = data.map(d => d.avg_temperature);
+  const humidities = data.map(d => d.avg_humidity);
 
-  const weatherIcons = data.map(d => {
-    const weather = d.weather_condition?.toLowerCase() || '';
-    if (weather.includes('clear') || weather.includes('sunny')) return '☀️';
-    if (weather.includes('cloud')) return '☁️';
-    if (weather.includes('rain')) return '🌧️';
-    if (weather.includes('snow')) return '❄️';
-    return '🌤️';
-  });
+  // 気温軸の範囲と間隔を計算
+  const validTemperatures = temperatures.filter((t): t is number => t !== null && t !== undefined);
+  let tempMin = 0;
+  let tempMax = 40;
+  let tempStepSize = 5;
+
+  if (validTemperatures.length > 0) {
+    const dataMin = Math.min(...validTemperatures);
+    const dataMax = Math.max(...validTemperatures);
+
+    // 最小値の決定：0度を下回る場合は10の倍数に切り下げ
+    if (dataMin < 0) {
+      tempMin = Math.floor(dataMin / 10) * 10;
+    }
+
+    // 最大値の決定：40度を上回る場合は10の倍数に切り上げ
+    if (dataMax > 40) {
+      tempMax = Math.ceil(dataMax / 10) * 10;
+    }
+
+    // 間隔の決定：範囲に応じて調整
+    const range = tempMax - tempMin;
+    if (range <= 20) {
+      tempStepSize = 2;
+    } else if (range <= 40) {
+      tempStepSize = 5;
+    } else {
+      tempStepSize = 10;
+    }
+  }
 
   const chartData = {
     labels,
     datasets: [
       {
         label: '気温 (℃)',
-        data: data.map(d => d.avg_temperature || null),
+        data: temperatures,
         borderColor: 'rgb(255, 211, 61)',
         backgroundColor: 'rgba(255, 211, 61, 0.1)',
-        tension: 0.4,
+        tension: 0.1,
         fill: true,
         yAxisID: 'y',
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
       {
         label: '湿度 (%)',
-        data: data.map(d => d.avg_humidity || null),
+        data: humidities,
         borderColor: 'rgb(107, 203, 119)',
         backgroundColor: 'rgba(107, 203, 119, 0.1)',
-        tension: 0.4,
+        tension: 0.1,
         fill: true,
         yAxisID: 'y1',
+        pointRadius: 4,
+        pointHoverRadius: 6,
       }
     ]
   };
@@ -96,8 +122,25 @@ function WeatherChart({ data }: WeatherChartProps) {
         displayColors: true,
         callbacks: {
           title: (context) => {
-            const index = context[0].dataIndex;
-            return `${context[0].label} ${weatherIcons[index]}`;
+            // 'MM/DD HH:00' 形式で表示
+            return context[0].label;
+          },
+          label: (context) => {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.y !== null) {
+              // データセットに応じて単位を追加
+              if (context.dataset.label?.includes('気温')) {
+                label += context.parsed.y.toFixed(1) + '°C';
+              } else if (context.dataset.label?.includes('湿度')) {
+                label += context.parsed.y.toFixed(0) + '%';
+              } else {
+                label += context.parsed.y.toFixed(1);
+              }
+            }
+            return label;
           }
         }
       }
@@ -117,6 +160,11 @@ function WeatherChart({ data }: WeatherChartProps) {
         },
         grid: {
           color: 'rgba(0, 0, 0, 0.05)'
+        },
+        min: tempMin,
+        max: tempMax,
+        ticks: {
+          stepSize: tempStepSize
         }
       },
       y1: {
@@ -142,9 +190,12 @@ function WeatherChart({ data }: WeatherChartProps) {
           display: false
         },
         ticks: {
-          callback: function(tickValue, index) {
-            return `${labels[index]}\n${weatherIcons[index]}`;
-          }
+          maxRotation: 45,
+          minRotation: 45
+        },
+        title: {
+          display: true,
+          text: '日時'
         }
       }
     }

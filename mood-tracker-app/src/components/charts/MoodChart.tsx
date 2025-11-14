@@ -29,38 +29,33 @@ interface MoodChartProps {
 }
 
 function MoodChart({ data }: MoodChartProps) {
-  const labels = data.map(d => {
-    const date = new Date(d.date);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  });
-
-  const weatherIcons = data.map(d => {
-    const weather = d.weather_condition?.toLowerCase() || '';
-    if (weather.includes('clear') || weather.includes('sunny')) return '☀️';
-    if (weather.includes('cloud')) return '☁️';
-    if (weather.includes('rain')) return '🌧️';
-    if (weather.includes('snow')) return '❄️';
-    return '🌤️';
-  });
+  // データは既に時間単位でグループ化されている (dateフィールドが 'MM/DD HH24:00' 形式)
+  const labels = data.map(d => d.date);
+  const emotionScores = data.map(d => d.avg_emotion);
+  const motivationScores = data.map(d => d.avg_motivation);
 
   const chartData = {
     labels,
     datasets: [
       {
         label: '気分',
-        data: data.map(d => d.avg_emotion || null),
+        data: emotionScores,
         borderColor: 'rgb(255, 107, 157)',
         backgroundColor: 'rgba(255, 107, 157, 0.1)',
-        tension: 0.4,
+        tension: 0.1,
         fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       },
       {
         label: 'モチベーション',
-        data: data.map(d => d.avg_motivation || null),
+        data: motivationScores,
         borderColor: 'rgb(180, 167, 214)',
         backgroundColor: 'rgba(180, 167, 214, 0.1)',
-        tension: 0.4,
+        tension: 0.1,
         fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       }
     ]
   };
@@ -68,6 +63,10 @@ function MoodChart({ data }: MoodChartProps) {
   const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top',
@@ -90,8 +89,18 @@ function MoodChart({ data }: MoodChartProps) {
         displayColors: true,
         callbacks: {
           title: (context) => {
-            const index = context[0].dataIndex;
-            return `${context[0].label} ${weatherIcons[index]}`;
+            // 'MM/DD HH:00' 形式で表示
+            return context[0].label;
+          },
+          label: (context) => {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.y !== null) {
+              label += context.parsed.y.toFixed(1);
+            }
+            return label;
           }
         }
       }
@@ -105,6 +114,10 @@ function MoodChart({ data }: MoodChartProps) {
         },
         grid: {
           color: 'rgba(0, 0, 0, 0.05)'
+        },
+        title: {
+          display: true,
+          text: 'スコア'
         }
       },
       x: {
@@ -112,9 +125,12 @@ function MoodChart({ data }: MoodChartProps) {
           display: false
         },
         ticks: {
-          callback: function(tickValue, index) {
-            return `${labels[index]}\n${weatherIcons[index]}`;
-          }
+          maxRotation: 45,
+          minRotation: 45
+        },
+        title: {
+          display: true,
+          text: '日時'
         }
       }
     }

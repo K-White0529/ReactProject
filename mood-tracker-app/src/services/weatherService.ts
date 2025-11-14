@@ -19,4 +19,20 @@ export async function getCurrentWeather(): Promise<CurrentWeather | null> {
   }
 }
 
-// TODO: 記録に紐づく天気情報を取得する関数を追加
+/**
+ * 記録IDに紐づく気象データを取得
+ */
+export async function getWeatherByRecordId(recordId: number): Promise<CurrentWeather | null> {
+  try {
+    const response = await api.get<ApiResponse<CurrentWeather>>(`/api/weather/record/${recordId}`);
+
+    if (response.data.success && response.data.data) {
+      return response.data.data;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Weather fetch by record error:', error);
+    return null;
+  }
+}

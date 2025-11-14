@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRecordById } from '../services/recordService';
-// TODO: 記録に紐づくget関数を定義
-import { getCurrentWeather } from '../services/weatherService';
+import { getWeatherByRecordId } from '../services/weatherService';
 import type { CurrentWeather, Record } from '../types';
 import { HiArrowLeft } from 'react-icons/hi';
 import './RecordDetail.css';
@@ -38,10 +37,8 @@ function RecordDetail({ recordId, onNavigate }: RecordDetailProps) {
 	const loadWeather = async () => {
 		try {
 			setWeatherLoading(true);
-			// TODO: 記録に紐づく天気情報を取得するように修正
-			// const data = await getCurrentWeather();
-			// setWeather(data);
-			setWeather(null);
+			const data = await getWeatherByRecordId(recordId);
+			setWeather(data);
 		} catch (error) {
 			console.error('Weather load error:', error);
 		} finally {
@@ -189,9 +186,9 @@ function RecordDetail({ recordId, onNavigate }: RecordDetailProps) {
 											<div className="score-display-bar">
 												<div
 													className="score-display-fill"
-													style={{ width: `${(record.exercise_intensity / 10) * 100}` }}
+													style={{ width: `${(record.exercise_intensity / 10) * 100}%` }}
 												></div>
-												<span className="score-display-value">{record.sleep_quality}</span>
+												<span className="score-display-value">{record.exercise_intensity}</span>
 											</div>
 										</div>
 									)}
