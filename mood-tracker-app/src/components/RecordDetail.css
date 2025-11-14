@@ -1,0 +1,265 @@
+.record-detail-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.record-detail-header {
+  margin-bottom: 2rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #FF6B9D;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s;
+  margin-bottom: 1rem;
+}
+
+.back-btn:hover {
+  background: #FFF0F5;
+}
+
+.record-detail-header h1 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.record-detail-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #F5F5F5;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.detail-section h3 {
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.record-datetime {
+  color: #666;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #FFF0F5 0%, #F0E6FF 100%);
+  border-radius: 12px;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.scores-display {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.score-display-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.score-display-label {
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.score-display-bar {
+  position: relative;
+  height: 40px;
+  background: #F5F5F5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.score-display-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B9D 0%, #C239B3 100%);
+  border-radius: 20px;
+  transition: width 0.5s ease;
+}
+
+.score-display-value {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.memo-item {
+  margin-bottom: 1.5rem;
+}
+
+.memo-item:last-child {
+  margin-bottom: 0;
+}
+
+.memo-item h4 {
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.memo-item p {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.error-container {
+  max-width: 600px;
+  margin: 4rem auto;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* 気象情報カード */
+.weather-info-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.weather-info-card.loading {
+  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+  justify-content: center;
+}
+
+.weather-loading {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.weather-icon-large {
+  font-size: 4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.weather-details {
+  flex: 1;
+}
+
+.weather-location {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.weather-condition {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.weather-metrics {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.weather-metric {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .record-detail-container {
+    padding: 1rem;
+  }
+
+  .record-detail-card {
+    padding: 1.5rem;
+  }
+
+  .detail-row {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-info-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+    gap: 1rem;
+  }
+
+  .weather-icon-large {
+    font-size: 3rem;
+  }
+
+  .weather-condition {
+    font-size: 1.25rem;
+  }
+
+  .weather-metrics {
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .weather-metric {
+    font-size: 1rem;
+  }
+}

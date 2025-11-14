@@ -1,118 +1,218 @@
 import { useState, useEffect } from 'react';
-import { getRecords } from '../services/recordService';
-import type { Record } from '../types';
+import { getRecords, getRecordStats, getChartData } from '../services/recordService';
+import type { Record, RecordStats, ChartData } from '../types';
+import { HiChartBar, HiCalendar, HiEmojiHappy, HiLightningBolt, HiPlus } from 'react-icons/hi';
+import MoodChart from './charts/MoodChart';
+import WeatherChart from './charts/WeatherChart';
+import './Dashboard.css';
 
-function Dashboard() {
-  const [records, setRecords] = useState<Record[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+interface DashboardProps {
+	onNavigate?: (page: string) => void;
+}
 
-  useEffect(() => {
-    loadRecords();
-  }, []);
+function Dashboard({ onNavigate }: DashboardProps) {
+	const [records, setRecords] = useState<Record[]>([]);
+	const [stats, setStats] = useState<RecordStats | null>(null);
+	const [chartData, setChartData] = useState<ChartData | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<string>('');
+	const [chartRange, setChartRange] = useState<string>('3weeks');
 
-  const loadRecords = async () => {
-    try {
-      setLoading(true);
-      const data = await getRecords();
-      setRecords(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '記録の取得に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
+	useEffect(() => {
+		loadData();
+	}, [chartRange]);
 
-  if (loading) {
-    return <div className="loading">読み込み中...</div>;
-  }
+	const loadData = async () => {
+		try {
+			setLoading(true);
+			const [recordsData, statsData, chartDataResult] = await Promise.all([
+				getRecords(10),
+				getRecordStats(),
+				getChartData(chartRange)
+			]);
+			setRecords(recordsData);
+			setStats(statsData);
+			setChartData(chartDataResult);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  return (
-    <div className="dashboard-content">
-      <h1 className="page-title">ダッシュボード</h1>
+	const handleQuickAction = (page: string) => {
+		if (onNavigate) {
+			onNavigate(page);
+		}
+	};
 
-      {error && <div className="error-message">{error}</div>}
+	const handleRecordClick = (recordId: number) => {
+		if (onNavigate) {
+			onNavigate(`record-detail/${recordId}`);
+		}
+	};
 
-      <div className="records-list">
-        <h2>記録一覧（{records.length}件）</h2>
-        {records.length === 0 ? (
-          <div className="empty-state">
-            <p>まだ記録がありません</p>
-            <p>「データ登録」から記録を追加してみましょう！</p>
-          </div>
-        ) : (
-          records.map((record) => (
-            <div key={record.id} className="record-item">
-              <h3>{new Date(record.recorded_at).toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                weekday: 'short'
-              })}</h3>
+	if (loading) {
+		return <div className="loading">読み込み中...</div>;
+	}
 
-              {/* 睡眠情報 */}
-              {(record.sleep_hours || record.sleep_quality) && (
-                <p>
-                  <strong>睡眠:</strong>{' '}
-                  {record.sleep_hours && `${record.sleep_hours}時間`}
-                  {record.sleep_hours && record.sleep_quality && ' / '}
-                  {record.sleep_quality && `質: ${record.sleep_quality}/10`}
-                </p>
-              )}
+	return (
+		<div className="dashboard-content">
+			<h1 className="page-title">ダッシュボード</h1>
 
-              {/* 食事情報 */}
-              {(record.meal_quality || record.meal_regularity) && (
-                <p>
-                  <strong>食事:</strong>{' '}
-                  {record.meal_quality && `質: ${record.meal_quality}/10`}
-                  {record.meal_quality && record.meal_regularity && ' / '}
-                  {record.meal_regularity && `規則性: ${record.meal_regularity}/10`}
-                </p>
-              )}
+			{error && <div className="error-message">{error}</div>}
 
-              {/* 運動情報 */}
-              {(record.exercise_minutes || record.exercise_intensity) && (
-                <p>
-                  <strong>運動:</strong>{' '}
-                  {record.exercise_minutes && `${record.exercise_minutes}分`}
-                  {record.exercise_minutes && record.exercise_intensity && ' / '}
-                  {record.exercise_intensity && `強度: ${record.exercise_intensity}/10`}
-                </p>
-              )}
+			{/* グラフ範囲選択 */}
+			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
+				<div className="chart-range-selector">
+					<label htmlFor="chart-range">表示範囲：</label>
+					<select 
+						id="chart-range"
+						value={chartRange} 
+						onChange={(e) => setChartRange(e.target.value)}
+						className="range-select"
+					>
+						<option value="today">今日のデータ</option>
+						<option value="3days">直近3日間</option>
+						<option value="1week">直近1週間</option>
+						<option value="3weeks">直近3週間</option>
+					</select>
+				</div>
+			)}
 
-              {/* 感情スコア */}
-              {record.emotion_score && (
-                <p>
-                  <strong>気分:</strong> {record.emotion_score}/10
-                </p>
-              )}
+			{/* グラフセクション */}
+			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
+				<div className="charts-section">
+					{chartData.mood.length > 0 && (
+						<div className="chart-card">
+							<h3 className="chart-title">気分とモチベーションの推移</h3>
+							<MoodChart data={chartData.mood} />
+						</div>
+					)}
+					{chartData.weather.length > 0 && (
+						<div className="chart-card">
+							<h3 className="chart-title">気温と湿度の推移</h3>
+							<WeatherChart data={chartData.weather} />
+						</div>
+					)}
+				</div>
+			)}
 
-              {/* モチベーション */}
-              {record.motivation_score && (
-                <p>
-                  <strong>モチベーション:</strong> {record.motivation_score}/10
-                </p>
-              )}
+			{/* 統計パネル */}
+			<div className="stats-grid">
+				<div className="stat-card">
+					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #FFA07A 100%)' }}>
+						<HiChartBar size={28} />
+					</div>
+					<div className="stat-content">
+						<div className="stat-label">総記録数</div>
+						<div className="stat-value">{stats?.total_records || 0}</div>
+					</div>
+				</div>
 
-              {/* やったこと */}
-              {record.activities_done && (
-                <p>
-                  <strong>やったこと:</strong> {record.activities_done}
-                </p>
-              )}
+				<div className="stat-card">
+					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #B4A7D6 0%, #D4C5F9 100%)' }}>
+						<HiCalendar size={28} />
+					</div>
+					<div className="stat-content">
+						<div className="stat-label">今週の記録</div>
+						<div className="stat-value">{stats?.this_week_records || 0}</div>
+					</div>
+				</div>
 
-              {/* メモ */}
-              {record.emotion_note && (
-                <p>
-                  <strong>メモ:</strong> {record.emotion_note}
-                </p>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+				<div className="stat-card">
+					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #FFD93D 0%, #FFA500 100%)' }}>
+						<HiEmojiHappy size={28} />
+					</div>
+					<div className="stat-content">
+						<div className="stat-label">平均気分</div>
+						<div className="stat-value">
+							{stats?.avg_emotion_score ? `${stats.avg_emotion_score}/10` : '-'}
+						</div>
+					</div>
+				</div>
+
+				<div className="stat-card">
+					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6BCB77 0%, #4D96A9 100%)' }}>
+						<HiLightningBolt size={28} />
+					</div>
+					<div className="stat-content">
+						<div className="stat-label">平均モチベーション</div>
+						<div className="stat-value">
+							{stats?.avg_motivation_score ? `${stats.avg_motivation_score}/10` : '-'}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* クイックアクション */}
+			<div className="quick-actions">
+				<h2 className="section-title">クイックアクション</h2>
+				<div className="action-buttons">
+					<button className="action-button" onClick={() => handleQuickAction('record')}>
+						<HiPlus size={24} />
+						<span>データを登録</span>
+					</button>
+					<button className="action-button" onClick={() => handleQuickAction('analysis')}>
+						<HiChartBar size={24} />
+						<span>自己分析を行う</span>
+					</button>
+				</div>
+			</div>
+
+			{/* 最近の記録 */}
+			<div className="recent-records">
+				<h2 className="section-title">最近の記録</h2>
+				{records.length === 0 ? (
+					<div className="empty-state">
+						<p>まだ記録がありません</p>
+						<p>「データ登録」から記録を追加してみましょう！</p>
+					</div>
+				) : (
+					<div className="records-grid">
+						{records.map((record) => (
+							<div
+								key={record.id}
+								className="record-card clickable"
+								onClick={() => handleRecordClick(record.id)}
+							>
+								<div className="record-date">
+									{new Date(record.recorded_at).toLocaleString('ja-JP', {
+										year: 'numeric',
+										month: '2-digit',
+										day: '2-digit',
+										hour: '2-digit',
+										minute: '2-digit'
+									})}
+								</div>
+								<div className="record-scores">
+									{record.emotion_score && (
+										<div className="score-item">
+											<span className="score-label">気分</span>
+											<span className="score-value">{record.emotion_score}/10</span>
+										</div>
+									)}
+									{record.motivation_score && (
+										<div className="score-item">
+											<span className="score-label">やる気</span>
+											<span className="score-value">{record.motivation_score}/10</span>
+										</div>
+									)}
+								</div>
+								{record.activities_done && (
+									<div className="record-activity">
+										{record.activities_done.length > 50
+											? `${record.activities_done.substring(0, 50)}...`
+											: record.activities_done}
+									</div>
+								)}
+							</div>
+						))}
+					</div>
+				)}
+			</div>
+		</div>
+	);
 }
 
 export default Dashboard;

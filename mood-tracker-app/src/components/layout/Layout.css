@@ -10,12 +10,12 @@
   flex: 1;
   padding: 2rem;
   transition: margin-left 0.3s ease;
-  margin-left: 80px; /* collapsed sidebar width */
+  margin-left: 80px;
   background: transparent;
 }
 
 .main-content.sidebar-expanded {
-  margin-left: 260px; /* expanded sidebar width */
+  margin-left: 260px;
 }
 
 /* サイドバー */
@@ -130,6 +130,17 @@
   padding: 0.875rem;
 }
 
+/* アクティブなナビゲーション項目 */
+.nav-item.active {
+  background-color: #FFF0F5;
+  color: #FF6B9D;
+  font-weight: 600;
+}
+
+.nav-item.active .nav-icon {
+  color: #FF6B9D;
+}
+
 /* ユーザーメニュー */
 .sidebar-user {
   padding: 1rem 0.5rem;
@@ -203,7 +214,7 @@
   .main-content {
     margin-left: 0 !important;
     padding: 1rem;
-    padding-top: 80px; /* ヘッダーの高さ分 */
+    padding-top: 80px;
   }
 
   /* PC用サイドバーを非表示 */

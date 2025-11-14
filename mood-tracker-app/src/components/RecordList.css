@@ -1,0 +1,139 @@
+.record-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.record-list-header {
+  margin-bottom: 2rem;
+}
+
+.record-list-header h1 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.record-count {
+  color: #666;
+  font-size: 1rem;
+}
+
+.no-records-message {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.no-records-message p {
+  color: #666;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #FF6B9D 0%, #C239B3 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
+}
+
+.records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.record-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.record-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.record-card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #F5F5F5;
+}
+
+.record-date {
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.record-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.record-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #FFF0F5 0%, #F0E6FF 100%);
+  border-radius: 12px;
+}
+
+.score-label {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #FF6B9D;
+}
+
+.record-memo {
+  margin-top: 0.5rem;
+}
+
+.record-memo p {
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .record-list-container {
+    padding: 1rem;
+  }
+
+  .records-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .record-scores-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { RecordModel } from '../models/Record';
 import { RecordInput } from '../types';
+import { WeatherDataModel } from '../models/WeatherData';
+import { getCurrentWeather } from '../services/weatherService';
 
 /**
  * ユーザーの記録一覧を取得
@@ -89,6 +91,24 @@ export async function createRecord(req: Request, res: Response): Promise<void> {
 
     const recordData: RecordInput = req.body;
     const record = await RecordModel.create(userId, recordData);
+
+    // 気象データを取得して保存（非同期で実行、エラーがあっても記録作成は成功とする）
+    getCurrentWeather('Tokyo')
+      .then(async (weatherData) => {
+        if (weatherData) {
+          await WeatherDataModel.create(
+            userId,
+            weatherData.temperature,
+            weatherData.humidity,
+            weatherData.weatherCondition,
+            weatherData.location
+          );
+          console.log('Weather data saved successfully');
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to save weather data:', error);
+      });
 
     res.status(201).json({
       success: true,
@@ -180,6 +200,75 @@ export async function deleteRecord(req: Request, res: Response): Promise<void> {
     res.status(500).json({
       success: false,
       message: '記録の削除に失敗しました'
+    });
+  }
+}
+
+/**
+ * 統計情報を取得
+ */
+export async function getRecordStats(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: '認証が必要です'
+      });
+      return;
+    }
+
+    const stats = await RecordModel.getStats(userId);
+
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('統計情報取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: '統計情報の取得に失敗しました'
+    });
+  }
+}
+
+/**
+ * グラフ用のデータを取得
+ */
+export async function getChartData(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: '認証が必要です'
+      });
+      return;
+    }
+
+    // クエリパラメータからrangeを取得 (デフォルト: '3weeks')
+    const range = (req.query.range as string) || '3weeks';
+
+    const [moodData, weatherData] = await Promise.all([
+      RecordModel.getChartData(userId, range),
+      RecordModel.getWeatherChartData(userId, range)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        mood: moodData,
+        weather: weatherData
+      }
+    });
+  } catch (error) {
+    console.error('グラフデータ取得エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'グラフデータの取得に失敗しました'
     });
   }
 }

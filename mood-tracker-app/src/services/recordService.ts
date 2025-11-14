@@ -1,5 +1,5 @@
 import api from './api';
-import type { Record, RecordInput, ApiResponse } from '../types';
+import type { Record, RecordInput, RecordStats, ChartData, ApiResponse } from '../types';
 
 /**
  * 記録一覧を取得
@@ -62,4 +62,34 @@ export async function deleteRecord(id: number): Promise<void> {
   if (!response.data.success) {
     throw new Error(response.data.message || '記録の削除に失敗しました');
   }
+}
+
+export async function getRecordStats(): Promise<RecordStats> {
+  const response = await api.get<ApiResponse<RecordStats>>('/api/records/stats');
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return {
+    total_records: 0,
+    this_week_records: 0
+  };
+}
+
+/**
+ * グラフ用のデータを取得
+ * @param range 表示範囲 ('today' | '3days' | '1week' | '3weeks')
+ */
+export async function getChartData(range: string = '3weeks'): Promise<ChartData> {
+  const response = await api.get<ApiResponse<ChartData>>(`/api/records/chart?range=${range}`);
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return {
+    mood: [],
+    weather: []
+  };
 }
