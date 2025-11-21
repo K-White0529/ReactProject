@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes';
 import recordRoutes from './routes/recordRoutes';
 import analysisRoutes from './routes/analysisRoutes';
 import weatherRoutes from './routes/weatherRoutes';
+import adviceRoutes from './routes/adviceRoutes';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/advice', adviceRoutes);
 
 // 404エラーハンドリング
 app.use((req, res) => {

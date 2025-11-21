@@ -44,7 +44,7 @@ function App() {
       case 'dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
       case 'record':
-        return <RecordForm />;
+        return <RecordForm onNavigate={handleNavigate} />;
       case 'analysis':
         return <AnalysisForm />;
       case 'record-list':

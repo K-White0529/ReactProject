@@ -74,3 +74,18 @@ export async function saveAnswers(answers: AnalysisAnswerInput[]): Promise<void>
     throw new Error(response.data.message || '回答の保存に失敗しました');
   }
 }
+
+/**
+ * ランダムな質問を取得（記録入力用）
+ */
+export async function getRandomQuestions(questionsPerCategory: number = 5): Promise<AnalysisQuestion[]> {
+  const response = await api.get<ApiResponse<AnalysisQuestion[]>>(
+    `/api/analysis/random?perCategory=${questionsPerCategory}`
+  );
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return [];
+}

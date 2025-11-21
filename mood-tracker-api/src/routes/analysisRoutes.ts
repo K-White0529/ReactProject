@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCategories, getQuestions, saveAnswers } from '../controllers/analysisController';
+import { getCategories, getQuestions, saveAnswers, generateQuestions, getCategoryScores, getCategoryTrends, getRandomQuestions } from '../controllers/analysisController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -15,5 +15,17 @@ router.get('/questions', getQuestions);
 
 // POST /api/analysis/answers - 回答保存
 router.post('/answers', saveAnswers);
+
+// POST /api/analysis/generate - AI質問生成（テスト用）
+router.post('/generate', generateQuestions);
+
+// GET /api/analysis/scores - 観点別平均スコア取得
+router.get('/scores', getCategoryScores);
+
+// GET /api/analysis/trends - 観点別スコア遷移取得
+router.get('/trends', getCategoryTrends);
+
+// GET /api/analysis/random - ランダムな質問取得（記録入力用）
+router.get('/random', getRandomQuestions);
 
 export default router;
