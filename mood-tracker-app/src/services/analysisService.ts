@@ -65,6 +65,22 @@ export interface AnalysisResponse {
   analysis: AnalysisResultData;
 }
 
+// 観点別平均スコアの型
+export interface CategoryScore {
+  category_code: string;
+  category_name: string;
+  avg_score: number;
+  answer_count: number;
+}
+
+// 観点別スコア遷移の型
+export interface CategoryTrend {
+  date: string;
+  category_code: string;
+  category_name: string;
+  avg_score: number;
+}
+
 /**
  * すべての分析観点を取得
  */
@@ -130,4 +146,44 @@ export async function analyzeUserData(days: number = 14): Promise<AnalysisRespon
   }
 
   throw new Error(response.data.message || 'データの分析に失敗しました');
+}
+
+/**
+ * 観点別平均スコアを取得（レーダーチャート用）
+ */
+export async function getCategoryScores(period: string = '1week'): Promise<CategoryScore[]> {
+  try {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/analysis/scores?period=${period}`
+    );
+
+    if (response.data.success && response.data.data && response.data.data.scores) {
+      return response.data.data.scores;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('getCategoryScores error:', error);
+    return [];
+  }
+}
+
+/**
+ * 観点別スコア遷移を取得（折れ線グラフ用）
+ */
+export async function getCategoryTrends(period: string = '1week'): Promise<CategoryTrend[]> {
+  try {
+    const response = await api.get<ApiResponse<any>>(
+      `/api/analysis/trends?period=${period}`
+    );
+
+    if (response.data.success && response.data.data && response.data.data.trends) {
+      return response.data.data.trends;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('getCategoryTrends error:', error);
+    return [];
+  }
 }
