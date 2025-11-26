@@ -96,7 +96,7 @@ Mood Tracker（調子記録アプリ）
 - ✅ analysis_questions（質問マスタ）
 - ✅ analysis_answers（回答データ）
 - ✅ weather_data（気象データ）
-- ✅ advice_history（アドバイス履歴）
+- ✅ ai_advice（アドバイス履歴）
 
 **完了日**: 2025年11月7日
 
@@ -125,9 +125,10 @@ Mood Tracker（調子記録アプリ）
 - ✅ PUT /api/records/:id - 記録更新
 - ✅ DELETE /api/records/:id - 記録削除
 - ✅ GET /api/records/stats - 統計情報取得
-- ✅ GET /api/records/chart - グラフデータ取得
+- ✅ GET /api/records/chart-data - グラフデータ取得
 - ✅ GET /api/weather/current - 現在の気象データ取得
-- ✅ GET /api/weather/record/:recordId - 記録に紐づく気象データ取得
+- ✅ GET /api/analysis/scores - 観点別平均スコア取得
+- ✅ GET /api/analysis/trends - 観点別スコア遷移取得
 
 **完了日**: 2025年11月13日
 
@@ -191,9 +192,9 @@ Mood Tracker（調子記録アプリ）
   - GET /api/analysis/questions
   - POST /api/analysis/answers
   - Analysis.ts（モデル）
-  - 初期データ（3観点、9質問）
+  - 初期データ（5観点：ストレス、集中力、モチベーション、睡眠の質、社会的つながり）
 - フロントエンド：完全実装
-  - AnalysisForm.tsx（質問表示・回答画面）
+  - AnalysisForm.tsx（統合分析画面）
   - AnalysisForm.css（スタイリング）
   - analysisService.ts（API通信層）
 
@@ -203,12 +204,14 @@ Mood Tracker（調子記録アプリ）
 - ✅ レイアウト設計（Layout, Sidebar実装）
 - ✅ 複数パネルの配置（統計パネル、グラフ、最近の記録）
 - ✅ レスポンシブデザインの実装
+- ✅ データがない期間の空の状態表示
 
 **学習内容**
 - CSS Grid/Flexboxの活用
 - レスポンシブブレークポイント
 - コンテナコンポーネントの設計
 - カードレイアウトの実装
+- 空の状態のデザインパターン
 
 **実装したコンポーネント**
 - Dashboard.tsx
@@ -216,15 +219,16 @@ Mood Tracker（調子記録アプリ）
 - Layout.tsx
 - Sidebar.tsx
 
-**完了日**: 2025年11月13日
+**完了日**: 2025年11月13日、グラフ改善：2025年11月26日
 
 ### ステップ3-4: データ可視化 ✅ **完了**（45分）
 - ✅ Chart.jsの導入とCategoryScale設定
 - ✅ 過去データのグラフ表示（気分・モチベーション、気温・湿度）
 - ✅ 時間単位でのデータ集約と平均値計算
-- ✅ 日付範囲の選択機能（直近1週間 or 最大10件）
+- ✅ 日付範囲の選択機能（今日/直近3日間/1週間/3週間）
 - ✅ マウスホバー動作の改善（intersect: false）
 - ✅ 気温軸の動的範囲調整機能
+- ✅ データがない期間でもグラフ枠を表示
 
 **学習内容**
 - Chart.jsの基本設定
@@ -233,12 +237,13 @@ Mood Tracker（調子記録アプリ）
 - インタラクティブなグラフ
 - CategoryScaleの必要性
 - 動的な軸範囲計算
+- 空の状態の表示デザイン
 
 **実装したコンポーネント**
 - MoodChart.tsx（気分・モチベーション）
 - WeatherChart.tsx（気温・湿度、動的範囲調整機能付き）
 
-**完了日**: 2025年11月14日
+**完了日**: 2025年11月14日、グラフ改善：2025年11月26日
 
 ### ステップ3-5: 気象データ連携 ✅ **完了**（45分）
 - ✅ WeatherAPIの使用方法
@@ -258,20 +263,20 @@ Mood Tracker（調子記録アプリ）
 **実装した機能**
 - バックエンド:
   - weatherService.ts（getCurrentWeather, getWeatherByCoordinates）
-  - WeatherDataModel.ts（create, getByUserAndDate, getByRecordId）
-  - weatherController.ts（getCurrentWeatherData, getWeatherByRecordId）
-  - weatherRoutes.ts（GET /api/weather/record/:recordId）
+  - WeatherDataModel.ts（create, getByUserAndDate）
+  - weatherController.ts（getCurrentWeatherData）
+  - weatherRoutes.ts（GET /api/weather/current）
   - 記録作成時の自動気象データ取得（非同期処理）
 - フロントエンド:
-  - weatherService.ts（getCurrentWeather, getWeatherByRecordId）
+  - weatherService.ts（getCurrentWeather）
   - RecordDetail.tsxでの気象情報カード表示（完全実装）
   - RecordForm.tsxでの現在の気象データ表示
 
-**完了日**: 2025年11月13日（記録作成時の自動取得、記録詳細での表示）、2025年11月14日（グラフ表示改善）、2025年11月26日（記録詳細画面の完全実装）
+**完了日**: 2025年11月13日（記録作成時の自動取得）、2025年11月14日（グラフ表示改善）、2025年11月26日（記録詳細画面の完全実装）
 
 ---
 
-## Phase 4: AI機能統合とフロント実装 🔄 **進行中**（6/7ステップ、約315分）
+## Phase 4: AI機能統合とフロント実装 ✅ **完了**（7/7ステップ、約375分）
 
 ### ステップ4-1: Gemini API基礎 ✅ **完了**（45分）
 - ✅ Gemini APIの登録と設定
@@ -312,39 +317,23 @@ Mood Tracker（調子記録アプリ）
 
 **実装した機能**
 - aiService.generateQuestions(): 分析観点に基づく質問生成
-  - カテゴリー名と説明をコンテキストとして使用
-  - 5つの質問をJSON形式で生成
-  - JSONパース処理とエラーハンドリング
 - Analysis.saveGeneratedQuestions(): 生成質問のDB保存
-  - generated_by_ai フラグを true に設定
-  - トランザクション処理
-  - 質問の一括保存
 - GET /api/analysis/generate-questions: 質問生成APIエンドポイント
-  - カテゴリーIDをクエリパラメータで受け取り
-  - 質問生成とDB保存を実行
-  - 生成された質問を返却
-- 既存質問との重複チェック機能（今後の改善候補）
-
-**実装状況**
-- バックエンド:
-  - aiService.ts（質問生成機能実装済み）
-  - analysisController.ts（generateQuestions関数追加済み）
-  - analysisRoutes.ts（/generate-questionsルート追加済み）
-  - Analysis.ts（saveGeneratedQuestions関数追加済み）
-- フロントエンド: 今後実装予定（質問生成ボタンとUI）
 
 **完了日**: 2025年11月21日
 
-### ステップ4-3: データ分析機能 ✅ **完了**（45分）
+### ステップ4-3: データ分析機能 ✅ **完了**（60分）
 - ✅ 蓄積データの集計処理（記録データ、気象データ、分析回答データ）
 - ✅ AIによる傾向分析（Gemini API使用）
 - ✅ 相関関係の抽出（気象条件と気分・モチベーションの関係）
+- ✅ 分析結果のJSON形式での取得
 
 **学習内容**
 - SQLによるデータ集計（JOIN、AVG、COUNT）
 - 統計的な分析手法の基礎（平均値、傾向）
 - AIを活用した洞察の抽出（プロンプト設計）
 - 結果の構造化（JSON形式）
+- 複数データソースの統合
 
 **実装した機能**
 - バックエンド:
@@ -352,7 +341,6 @@ Mood Tracker（調子記録アプリ）
   - aiService.analyzeData(): Gemini APIを使用してデータを分析
   - analysisController.analyzeUserData(): 分析APIエンドポイント
   - GET /api/analysis/analyze?days=14: AI分析エンドポイント
-- フロントエンド: 今後実装予定
 
 **分析結果の構造**
 - summary: 全体的な状態の要約
@@ -362,51 +350,29 @@ Mood Tracker（調子記録アプリ）
 
 **完了日**: 2025年11月26日
 
-### ステップ4-4: アドバイス生成機能 ✅ **完了**（45分）
+### ステップ4-4: アドバイス生成機能 ✅ **完了**（60分）
 - ✅ パーソナライズされたアドバイス生成機能
 - ✅ 気象データを考慮したアドバイス
 - ✅ アドバイス履歴の保存と管理
-- ✅ API実装完了（フロントエンド表示は今後実装）
+- ✅ API実装完了
 
 **学習内容**
 - パーソナライズされたプロンプト設計
 - 複数データソースの統合（最新記録、直近記録、気象データ、AI分析結果）
 - アドバイスの履歴管理
 - データベースへの保存と取得
+- トークン消費の最適化
 
 **実装した機能**
 - バックエンド:
   - AdviceModel（Advice.ts）: アドバイス履歴の管理
-    - create(): アドバイスの保存（advice_type付き）
-    - getLatest(): 最新のアドバイス取得
-    - getHistory(): アドバイス履歴取得
-    - getById(): 特定アドバイス取得
-    - delete(): アドバイス削除
   - aiService.generatePersonalizedAdvice(): パーソナライズされたアドバイス生成
-    - 最新の記録データを分析
-    - 直近7日分の記録から傾向を計算（improving/stable/declining）
-    - 気象データの考慮
-    - AI分析結果の活用（オプション）
-    - 200文字以内の簡潔なアドバイス生成
-  - adviceController:
-    - getPersonalizedAdvice(): アドバイス生成エンドポイント
-    - getAdviceHistory(): アドバイス履歴取得エンドポイント
-  - adviceRoutes.ts:
-    - GET /api/advice/personalized: パーソナライズされたアドバイス生成
-    - GET /api/advice/history?limit=10: アドバイス履歴取得
-- フロントエンド: 今後実装予定（ダッシュボードにAdviceCard表示）
-
-**アドバイス生成のロジック**
-1. 最新の記録データ取得（気分、モチベーション、睡眠、運動）
-2. 直近7日分の記録から傾向を分析
-3. 現在の天気データを取得
-4. オプションで直近7日分のAI分析結果を取得
-5. Gemini APIで親しみやすいアドバイスを生成
-6. データベースに保存
+  - adviceController: アドバイス生成・履歴取得エンドポイント
+  - adviceRoutes.ts: GET /api/advice/personalized, GET /api/advice/history
 
 **完了日**: 2025年11月26日
 
-### ステップ4-5: ダッシュボードでのアドバイス表示 ✅ **完了**（30分）
+### ステップ4-5: ダッシュボードでのアドバイス表示 ✅ **完了**（45分）
 - ✅ adviceService.ts（API通信層）の実装
 - ✅ AdviceCard.tsx（アドバイス表示コンポーネント）
 - ✅ Dashboard.tsxへの統合
@@ -420,28 +386,14 @@ Mood Tracker（調子記録アプリ）
 - トークン消費の最適化
 
 **実装した機能**
-- フロントエンド:
-  - adviceService.ts：
-    - generatePersonalizedAdvice(): アドバイス生成API呼び出し
-    - getAdviceHistory(): 履歴取得API呼び出し
-    - getLatestAdvice(): 最新アドバイス取得
-  - AdviceCard.tsx：
-    - 最新アドバイスの読み込み（DBから取得）
-    - 更新ボタンで新規生成（ユーザーが明示的にクリック）
-    - 相対時刻表示（formatDate関数）
-    - 空の状態表示（自動生成しない）
-    - 履歴ページへのリンク
-  - Dashboard.tsx: アドバイスカードをページ上部に配置
-  - AdviceCard.css: グラデーション背景、アニメーション、レスポンシブデザイン
-
-**トークン節約の実装**
-- ダッシュボードアクセス時に自動生成しない
-- 既存のアドバイスを表示（DBから読み込み）
-- ユーザーが明示的に更新ボタンをクリックした時のみ生成
+- adviceService.ts: API通信層
+- AdviceCard.tsx: 最新アドバイス表示、手動更新、履歴へのリンク
+- AdviceCard.css: グラデーション背景、アニメーション
+- Dashboard.tsxへの統合
 
 **完了日**: 2025年11月26日
 
-### ステップ4-6: アドバイス履歴画面 ✅ **完了**（30分）
+### ステップ4-6: アドバイス履歴画面 ✅ **完了**（45分）
 - ✅ AdviceHistory.tsx（履歴一覧表示）
 - ✅ App.tsxにルーティング追加
 - ✅ Sidebar.tsxにナビゲーション追加
@@ -454,30 +406,65 @@ Mood Tracker（調子記録アプリ）
 - 空の状態のデザイン
 
 **実装した機能**
-- フロントエンド:
-  - AdviceHistory.tsx：
-    - 履歴一覧表示（最新20件）
-    - 日時表示（絶対時刻と相対時刻）
-    - 新しいアドバイス生成ボタン
-    - ダッシュボードへの戻るボタン
-    - 空の状態表示
-  - AdviceHistory.css: カードレイアウト、アニメーション
-  - App.tsx: advice-historyルート追加
-  - Sidebar.tsx: 「アドバイス履歴」メニュー項目追加
+- AdviceHistory.tsx: 履歴一覧、新規生成ボタン
+- AdviceHistory.css: カードレイアウト、アニメーション
+- ルーティングとナビゲーション統合
 
 **完了日**: 2025年11月26日
 
-### ステップ4-7: AI分析結果表示画面 ❌ **未実装**（30分）
-- ❌ 分析結果表示コンポーネント
-- ❌ 傾向や相関関係の視覚化
-- ❌ 推奨事項の表示
-- ❌ ダッシュボードからのアクセス
+### ステップ4-7: 統合分析画面 ✅ **完了**（75分）
+- ✅ 期間選択機能（今日/直近3日間/1週間/3週間）
+- ✅ レーダーチャートによる観点別スコア表示
+- ✅ スコア遷移グラフの実装
+- ✅ AI分析結果の統合表示
+- ✅ 非同期ローディング最適化
 
 **学習内容**
-- 複雑なデータの表示
-- 情報設計（インフォメーションアーキテクチャ）
-- アイコンや色を使った直感的なUI
-- JSONデータのレンダリング
+- Chart.jsのレーダーチャート実装
+- 複数データソースの並列取得
+- 非同期処理の最適化（Promise.all）
+- ローディング状態の分離管理
+- エラーハンドリングの改善
+- グラフコンポーネントの作成
+
+**実装した機能**
+- フロントエンド:
+  - CategoryRadarChart.tsx: レーダーチャートコンポーネント
+  - CategoryTrendsChart.tsx: スコア遷移グラフコンポーネント
+  - AnalysisForm.tsx（新版）: 統合分析画面
+    - 期間選択（4つのオプション）
+    - レーダーチャートとスコア遷移グラフ
+    - AI分析結果の統合表示
+    - グラフは即表示、AI分析は別途非同期実行
+    - ローディングスピナーとエラー処理
+  - AnalysisForm.css: スタイリング
+  - analysisService.ts: getCategoryScores, getCategoryTrends追加
+
+- バックエンド（確認済み、変更なし）:
+  - GET /api/analysis/scores?period=1week
+  - GET /api/analysis/trends?period=1week
+  - AnalysisModel.getCategoryAverageScores()
+  - AnalysisModel.getCategoryScoreTrends()
+
+**非同期処理の最適化**:
+```typescript
+// グラフデータを先に読み込む（高速）
+const [scores, trends] = await Promise.all([
+  getCategoryScores(period),
+  getCategoryTrends(period)
+]);
+setLoading(false); // すぐにグラフを表示
+
+// AI分析は別途実行（時間がかかる）
+const aiAnalysis = await analyzeUserData(days);
+setAiLoading(false); // AI分析完了後に表示
+```
+
+**削除した機能**:
+- AnalysisResult.tsx（統合分析画面に機能を統合）
+- ダッシュボードとサイドバーの「AI分析結果」ボタン
+
+**完了日**: 2025年11月26日
 
 ---
 
@@ -577,14 +564,14 @@ Mood Tracker（調子記録アプリ）
 ### 進捗状況
 - ✅ **Phase 1 完了**（3/3ステップ） - 2025年11月上旬
 - ✅ **Phase 2 完了**（4/4ステップ） - 2025年11月7日～13日
-- ✅ **Phase 3 完了**（5/5ステップ） - 2025年11月13日～14日
-- 🔄 **Phase 4 進行中**（6/7ステップ） - 2025年11月21日〜26日
+- ✅ **Phase 3 完了**（5/5ステップ） - 2025年11月13日～14日、グラフ改善：11月26日
+- ✅ **Phase 4 完了**（7/7ステップ） - 2025年11月21日〜26日
 - ❌ Phase 5（0/3ステップ）
 - ❌ Phase 6（0/2ステップ）
 
-**現在の進捗率**: 18/24ステップ = **約75%完了**
+**現在の進捗率**: 19/24ステップ = **約79%完了**
 
-**次のマイルストーン**: Phase 4ステップ4-7（AI分析結果表示画面）
+**次のマイルストーン**: Phase 5（テストとCI/CD）またはPhase 6（デプロイと最適化）
 
 ---
 
@@ -615,6 +602,14 @@ Mood Tracker（調子記録アプリ）
   - 0度を下回る場合：10の倍数に切り下げ
   - 40度を上回る場合：10の倍数に切り上げ
   - 範囲に応じた間隔の自動調整（2度/5度/10度）
+- **データがない期間でもグラフ枠を表示**
+- **空の状態メッセージの表示**
+
+### 統合分析画面の実装
+- CategoryRadarChart.tsx: レーダーチャート
+- CategoryTrendsChart.tsx: スコア遷移グラフ
+- AnalysisForm.tsx: 統合分析画面
+- 非同期ローディング最適化（グラフ即表示、AI分析別途実行）
 
 ---
 
@@ -628,8 +623,9 @@ Mood Tracker（調子記録アプリ）
 - ✅ コンポーネント設計とState管理
 - ✅ フック（useState, useEffect、カスタムフック）の活用
 - ✅ フォーム処理とバリデーション
-- ✅ データ可視化（Chart.js、時間単位集約、動的範囲調整）
+- ✅ データ可視化（Chart.js、レーダーチャート、時間単位集約、動的範囲調整）
 - ✅ レスポンシブデザイン
+- ✅ 非同期処理の最適化
 
 ### バックエンド ✅ 習得済み（基礎～応用）
 - ✅ Node.js + Expressによるサーバー構築
@@ -639,7 +635,7 @@ Mood Tracker（調子記録アプリ）
 - ✅ エラーハンドリング
 - ✅ 外部API連携（WeatherAPI）
 
-### AI統合 🔄 習得中（基礎〜中級）
+### AI統合 ✅ 習得済み（基礎〜中級）
 - ✅ LLM API（Gemini）の基礎
 - ✅ プロンプトエンジニアリングの基礎〜中級
 - ✅ 構造化されたレスポンス取得（JSON）
@@ -648,6 +644,7 @@ Mood Tracker（調子記録アプリ）
 - ✅ 複数データソースの統合分析
 - ✅ パーソナライズ機能の実装
 - ✅ AI機能のフロントエンド統合
+- ✅ トークン消費の最適化
 
 ### テストとCI/CD ❌ 未習得
 - ❌ ユニットテストの作成
@@ -701,4 +698,4 @@ Mood Tracker（調子記録アプリ）
 ---
 
 **最終更新日**: 2025年11月26日  
-**更新内容**: Phase 4にフロントエンド実装（ステップ4-5, 4-6）を追加、進捗率を75%に更新、総ステップ数24に変更
+**更新内容**: Phase 4完了（ステップ4-7追加）、ダッシュボードグラフ改善、統合分析画面実装、進捗率を79%に更新、総ステップ数24に変更
