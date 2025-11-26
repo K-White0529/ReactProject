@@ -47,13 +47,102 @@ export async function generateSimpleAdvice(userName: string): Promise<string> {
 }
 
 /**
- * ユーザーデータに基づくアドバイス生成（今後実装予定）
+ * ユーザーデータに基づくパーソナライズドアドバイス生成
  */
-export async function generatePersonalizedAdvice(
-    userData: any
-): Promise<string> {
-    // 今後実装
-    throw new Error("Not implemented yet");
+export async function generatePersonalizedAdvice(data: {
+    userName: string;
+    latestRecord: any;
+    recentRecords: any[];
+    currentWeather: any;
+    analysisResult?: any;
+}): Promise<string> {
+    try {
+        // 最新の記録データがない場合
+        if (!data.latestRecord) {
+            return `${data.userName}さん、こんにちは！\n\nまだ記録がないようですね。今日の調子を記録してみませんか？\n\n毎日の小さな記録が、大きな変化のキッカケになります。`;
+        }
+
+        // 最新データから情報を抽出
+        const emotionScore = data.latestRecord.emotion_score;
+        const motivationScore = data.latestRecord.motivation_score;
+        const sleepHours = data.latestRecord.sleep_hours;
+        const exerciseMinutes = data.latestRecord.exercise_minutes;
+
+        // 直近の傾向を計算
+        let emotionTrend = 'stable';
+        let motivationTrend = 'stable';
+
+        if (data.recentRecords.length >= 3) {
+            const recentEmotions = data.recentRecords
+                .filter(r => r.emotion_score)
+                .map(r => r.emotion_score);
+            const recentMotivations = data.recentRecords
+                .filter(r => r.motivation_score)
+                .map(r => r.motivation_score);
+
+            if (recentEmotions.length >= 3) {
+                const firstHalf = recentEmotions.slice(0, Math.floor(recentEmotions.length / 2));
+                const secondHalf = recentEmotions.slice(Math.floor(recentEmotions.length / 2));
+                const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+                const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+                if (avgSecond > avgFirst + 0.5) emotionTrend = 'improving';
+                else if (avgSecond < avgFirst - 0.5) emotionTrend = 'declining';
+            }
+
+            if (recentMotivations.length >= 3) {
+                const firstHalf = recentMotivations.slice(0, Math.floor(recentMotivations.length / 2));
+                const secondHalf = recentMotivations.slice(Math.floor(recentMotivations.length / 2));
+                const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+                const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+
+                if (avgSecond > avgFirst + 0.5) motivationTrend = 'improving';
+                else if (avgSecond < avgFirst - 0.5) motivationTrend = 'declining';
+            }
+        }
+
+        // AIプロンプトを作成
+        const prompt = `
+あなたは親しみやすく、共感力のあるウェルネスコーチです。
+以下のユーザーの情報に基づいて、パーソナライズされたアドバイスを生成してください。
+
+**ユーザー名**: ${data.userName}
+
+**最新の記録**:
+- 気分スコア: ${emotionScore !== null && emotionScore !== undefined ? emotionScore + '/10' : 'データなし'}
+- モチベーションスコア: ${motivationScore !== null && motivationScore !== undefined ? motivationScore + '/10' : 'データなし'}
+- 睡眠時間: ${sleepHours !== null && sleepHours !== undefined ? sleepHours + '時間' : 'データなし'}
+- 運動時間: ${exerciseMinutes !== null && exerciseMinutes !== undefined ? exerciseMinutes + '分' : 'データなし'}
+
+**直近の傾向**:
+- 気分の傾向: ${emotionTrend === 'improving' ? '向上している' : emotionTrend === 'declining' ? '低下している' : '安定している'}
+- モチベーションの傾向: ${motivationTrend === 'improving' ? '向上している' : motivationTrend === 'declining' ? '低下している' : '安定している'}
+
+**現在の天気**:
+${data.currentWeather ? `- 天気: ${data.currentWeather.weatherCondition}\n- 気温: ${data.currentWeather.temperature}°C\n- 湿度: ${data.currentWeather.humidity}%` : 'データなし'}
+
+${data.analysisResult ? `**AI分析結果の要約**:\n${data.analysisResult.summary}` : ''}
+
+**要件**:
+1. ユーザー名を使って親しみを込めた呼びかけで始める
+2. 現在の状態を認識し、共感を示す
+3. 天気を考慮した具体的なアドバイスを2〜3個提供する
+4. ポジティブで前向きなメッセージで結ぶ
+5. 200文字以内で簡潔にまとめる
+6. 文章は自然な語り口で、箇条書きや番号付きリストを使わず、段落形式で書く
+
+**重要**: アドバイス本文だけを出力してください。説明や追加のテキストは不要です。
+`;
+
+        console.log('アドバイス生成プロンプト送信...');
+        const advice = await generateText(prompt);
+        console.log('アドバイス生成成功:', advice.substring(0, 100));
+
+        return advice.trim();
+    } catch (error) {
+        console.error("パーソナライズドアドバイス生成エラー:", error);
+        throw new Error("Failed to generate personalized advice");
+    }
 }
 
 /**
