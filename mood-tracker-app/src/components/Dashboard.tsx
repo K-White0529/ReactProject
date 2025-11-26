@@ -4,6 +4,7 @@ import type { Record, RecordStats, ChartData } from '../types';
 import { HiChartBar, HiCalendar, HiEmojiHappy, HiLightningBolt, HiPlus } from 'react-icons/hi';
 import MoodChart from './charts/MoodChart';
 import WeatherChart from './charts/WeatherChart';
+import AdviceCard from './AdviceCard';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -17,10 +18,31 @@ function Dashboard({ onNavigate }: DashboardProps) {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string>('');
 	const [chartRange, setChartRange] = useState<string>('3weeks');
+	const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
 	useEffect(() => {
 		loadData();
 	}, [chartRange]);
+
+	// 記録保存成功イベントをリスン
+	useEffect(() => {
+		const handleRecordSaved = () => {
+			setShowSuccessNotification(true);
+			setTimeout(() => {
+				setShowSuccessNotification(false);
+			}, 5000);
+		};
+
+		window.addEventListener('recordSaved', handleRecordSaved);
+
+		return () => {
+			window.removeEventListener('recordSaved', handleRecordSaved);
+		};
+	}, []);
+
+	const handleCloseNotification = () => {
+		setShowSuccessNotification(false);
+	};
 
 	const loadData = async () => {
 		try {
@@ -58,17 +80,34 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
 	return (
 		<div className="dashboard-content">
+			{/* 成功通知 */}
+			{showSuccessNotification && (
+				<div className="floating-notification">
+					<span>記録を保存しました！</span>
+					<button
+						className="notification-close"
+						onClick={handleCloseNotification}
+						aria-label="閉じる"
+					>
+						×
+					</button>
+				</div>
+			)}
+
 			<h1 className="page-title">ダッシュボード</h1>
 
 			{error && <div className="error-message">{error}</div>}
+
+			{/* アドバイスカード */}
+			<AdviceCard onNavigateToHistory={() => handleQuickAction('advice-history')} />
 
 			{/* グラフ範囲選択 */}
 			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
 				<div className="chart-range-selector">
 					<label htmlFor="chart-range">表示範囲：</label>
-					<select 
+					<select
 						id="chart-range"
-						value={chartRange} 
+						value={chartRange}
 						onChange={(e) => setChartRange(e.target.value)}
 						className="range-select"
 					>
@@ -156,6 +195,10 @@ function Dashboard({ onNavigate }: DashboardProps) {
 					<button className="action-button" onClick={() => handleQuickAction('analysis')}>
 						<HiChartBar size={24} />
 						<span>自己分析を行う</span>
+					</button>
+					<button className="action-button" onClick={() => handleQuickAction('analysis-result')}>
+						<HiLightningBolt size={24} />
+						<span>AI分析結果を見る</span>
 					</button>
 				</div>
 			</div>

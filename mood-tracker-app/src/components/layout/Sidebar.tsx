@@ -6,7 +6,9 @@ import {
   HiChartBar,
   HiUser,
   HiHome,
-  HiViewList
+  HiViewList,
+  HiSparkles,
+  HiLightningBolt
 } from 'react-icons/hi';
 
 interface SidebarProps {
@@ -95,12 +97,30 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage,
         </button>
 
         <button
+          className={`nav-item ${currentPage === 'analysis-result' ? 'active' : ''}`}
+          onClick={() => handleNavigation('analysis-result')}
+          title="AI分析結果"
+        >
+          <HiLightningBolt size={24} className="nav-icon" />
+          {expanded && <span className="nav-label">AI分析結果</span>}
+        </button>
+
+        <button
           className={`nav-item ${isActive('record-list') ? 'active' : ''}`}
           onClick={() => handleNavigation('record-list')}
           title="記録一覧"
         >
           <HiViewList size={24} className="nav-icon" />
           {expanded && <span className="nav-label">記録一覧</span>}
+        </button>
+
+        <button
+          className={`nav-item ${currentPage === 'advice-history' ? 'active' : ''}`}
+          onClick={() => handleNavigation('advice-history')}
+          title="アドバイス履歴"
+        >
+          <HiSparkles size={24} className="nav-icon" />
+          {expanded && <span className="nav-label">アドバイス履歴</span>}
         </button>
       </nav>
 

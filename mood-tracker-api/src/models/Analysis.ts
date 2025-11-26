@@ -58,4 +58,197 @@ export class AnalysisModel {
       client.release();
     }
   }
+
+  /**
+   * AI生成された質問をデータベースに保存
+   */
+  static async saveGeneratedQuestions(categoryId: number, questions: string[]) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const savedQuestions = [];
+
+      for (const questionText of questions) {
+        const result = await client.query(
+          `INSERT INTO analysis_questions (category_id, question_text, is_active, generated_by_ai, usage_count)
+           VALUES ($1, $2, true, true, 0)
+           RETURNING *`,
+          [categoryId, questionText]
+        );
+
+        savedQuestions.push(result.rows[0]);
+      }
+
+      await client.query('COMMIT');
+      return savedQuestions;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * 観点別の平均スコアを取得
+   */
+  static async getCategoryAverageScores(
+    userId: number,
+    startDate: Date,
+    endDate: Date
+  ) {
+    const result = await pool.query(
+      `SELECT
+        c.id as category_id,
+        c.code as category_code,
+        c.name as category_name,
+        ROUND(AVG(aa.answer_score)::numeric, 1) as avg_score,
+        COUNT(aa.id) as answer_count
+       FROM analysis_categories c
+       LEFT JOIN analysis_questions q ON c.id = q.category_id AND q.is_active = true
+       LEFT JOIN analysis_answers aa ON q.id = aa.question_id
+         AND aa.user_id = $1
+         AND aa.answered_at >= $2
+         AND aa.answered_at <= $3
+       GROUP BY c.id, c.code, c.name
+       ORDER BY c.id`,
+      [userId, startDate, endDate]
+    );
+    return result.rows;
+  }
+
+  /**
+   * 観点別のスコア遷移データを取得（日次集計）
+   */
+  static async getCategoryScoreTrends(
+    userId: number,
+    startDate: Date,
+    endDate: Date
+  ) {
+    const result = await pool.query(
+      `SELECT
+        c.id as category_id,
+        c.code as category_code,
+        c.name as category_name,
+        DATE(aa.answered_at) as date,
+        ROUND(AVG(aa.answer_score)::numeric, 1) as avg_score,
+        COUNT(aa.id) as answer_count
+       FROM analysis_categories c
+       JOIN analysis_questions q ON c.id = q.category_id AND q.is_active = true
+       JOIN analysis_answers aa ON q.id = aa.question_id
+         AND aa.user_id = $1
+         AND aa.answered_at >= $2
+         AND aa.answered_at <= $3
+       GROUP BY c.id, c.code, c.name, DATE(aa.answered_at)
+       ORDER BY DATE(aa.answered_at), c.id`,
+      [userId, startDate, endDate]
+    );
+    return result.rows;
+  }
+
+  /**
+   * 各カテゴリからランダムに指定数の質問を取得
+   */
+  static async getRandomQuestionsByCategory(questionsPerCategory: number = 5) {
+    const result = await pool.query(
+      `SELECT
+        q.id,
+        q.category_id,
+        q.question_text,
+        c.name as category_name,
+        c.code as category_code
+       FROM (
+         SELECT
+           id,
+           category_id,
+           question_text,
+           ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY RANDOM()) as rn
+         FROM analysis_questions
+         WHERE is_active = true
+       ) q
+       JOIN analysis_categories c ON q.category_id = c.id
+       WHERE q.rn <= $1
+       ORDER BY RANDOM()`,
+      [questionsPerCategory]
+    );
+    return result.rows;
+  }
+
+  /**
+   * AI分析用の包括的なデータを取得
+   * ユーザーの記録データ、気象データ、分析回答データを期間指定で取得
+   */
+  static async getAnalysisData(userId: number, days: number = 14) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // 記録データ（気分、モチベーション、睡眠、運動など）
+    const recordsResult = await pool.query(
+      `SELECT
+        r.id,
+        r.recorded_at,
+        r.sleep_hours,
+        r.sleep_quality,
+        r.meal_quality,
+        r.meal_regularity,
+        r.exercise_minutes,
+        r.exercise_intensity,
+        r.emotion_score,
+        r.motivation_score
+       FROM records r
+       WHERE r.user_id = $1
+         AND r.recorded_at >= $2
+         AND r.recorded_at <= $3
+       ORDER BY r.recorded_at`,
+      [userId, startDate, endDate]
+    );
+
+    // 気象データ
+    const weatherResult = await pool.query(
+      `SELECT
+        w.recorded_at,
+        w.temperature,
+        w.humidity,
+        w.weather_condition,
+        w.location
+       FROM weather_data w
+       WHERE w.user_id = $1
+         AND w.recorded_at >= $2
+         AND w.recorded_at <= $3
+       ORDER BY w.recorded_at`,
+      [userId, startDate, endDate]
+    );
+
+    // 分析回答データ（観点別の平均スコア）
+    const analysisResult = await pool.query(
+      `SELECT
+        c.code as category_code,
+        c.name as category_name,
+        ROUND(AVG(aa.answer_score)::numeric, 1) as avg_score,
+        COUNT(aa.id) as answer_count
+       FROM analysis_categories c
+       LEFT JOIN analysis_questions q ON c.id = q.category_id AND q.is_active = true
+       LEFT JOIN analysis_answers aa ON q.id = aa.question_id
+         AND aa.user_id = $1
+         AND aa.answered_at >= $2
+         AND aa.answered_at <= $3
+       GROUP BY c.id, c.code, c.name
+       ORDER BY c.id`,
+      [userId, startDate, endDate]
+    );
+
+    return {
+      period: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        days
+      },
+      records: recordsResult.rows,
+      weather: weatherResult.rows,
+      analysis: analysisResult.rows
+    };
+  }
 }

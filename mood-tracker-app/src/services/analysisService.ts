@@ -38,6 +38,33 @@ export interface AnalysisAnswerInput {
   answer_score: number;
 }
 
+// AI分析結果の型
+export interface AnalysisTrend {
+  trend: 'improving' | 'stable' | 'declining';
+  description: string;
+}
+
+export interface AnalysisResultData {
+  summary: string;
+  trends: {
+    emotion: AnalysisTrend;
+    motivation: AnalysisTrend;
+  };
+  correlations: string[];
+  recommendations: string[];
+}
+
+export interface AnalysisPeriod {
+  startDate: string;
+  endDate: string;
+  days: number;
+}
+
+export interface AnalysisResponse {
+  period: AnalysisPeriod;
+  analysis: AnalysisResultData;
+}
+
 /**
  * すべての分析観点を取得
  */
@@ -73,4 +100,34 @@ export async function saveAnswers(answers: AnalysisAnswerInput[]): Promise<void>
   if (!response.data.success) {
     throw new Error(response.data.message || '回答の保存に失敗しました');
   }
+}
+
+/**
+ * ランダムな質問を取得（記録入力用）
+ */
+export async function getRandomQuestions(questionsPerCategory: number = 5): Promise<AnalysisQuestion[]> {
+  const response = await api.get<ApiResponse<AnalysisQuestion[]>>(
+    `/api/analysis/random?perCategory=${questionsPerCategory}`
+  );
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  return [];
+}
+
+/**
+ * AI分析を実行
+ */
+export async function analyzeUserData(days: number = 14): Promise<AnalysisResponse> {
+  const response = await api.get<ApiResponse<AnalysisResponse>>(
+    `/api/analysis/analyze?days=${days}`
+  );
+
+  if (response.data.success && response.data.data) {
+    return response.data.data;
+  }
+
+  throw new Error(response.data.message || 'データの分析に失敗しました');
 }

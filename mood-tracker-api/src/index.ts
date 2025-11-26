@@ -5,6 +5,7 @@ import authRoutes from './routes/authRoutes';
 import recordRoutes from './routes/recordRoutes';
 import analysisRoutes from './routes/analysisRoutes';
 import weatherRoutes from './routes/weatherRoutes';
+import adviceRoutes from './routes/adviceRoutes';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/weather', weatherRoutes);
+app.use('/api/advice', adviceRoutes);
 
 // 404エラーハンドリング
 app.use((req, res) => {
@@ -34,6 +36,9 @@ app.use((req, res) => {
 });
 
 // サーバー起動
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で起動しました`);
 });
+
+// タイムアウト設定（AI分析用に延長）
+server.timeout = 120000; // 120秒（2分）

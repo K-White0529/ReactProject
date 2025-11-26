@@ -4,7 +4,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 // Axiosインスタンスの作成
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  timeout: 10000, // 10秒
+  timeout: 60000, // 60秒（AI分析用に延長）
   headers: {
     'Content-Type': 'application/json',
   },
