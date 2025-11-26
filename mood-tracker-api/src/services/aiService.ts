@@ -57,6 +57,147 @@ export async function generatePersonalizedAdvice(
 }
 
 /**
+ * ユーザーの記録データをAIで分析
+ */
+export async function analyzeData(data: {
+    period: {
+        startDate: string;
+        endDate: string;
+        days: number;
+    };
+    records: any[];
+    weather: any[];
+    analysis: any[];
+}): Promise<any> {
+    try {
+        // データが空の場合は分析できない
+        if (data.records.length === 0) {
+            return {
+                error: "分析するデータがありません。記録を追加してください。",
+            };
+        }
+
+        // 統計情報の計算
+        const emotionScores = data.records
+            .filter((r) => r.emotion_score !== null)
+            .map((r) => r.emotion_score);
+        const motivationScores = data.records
+            .filter((r) => r.motivation_score !== null)
+            .map((r) => r.motivation_score);
+        const sleepHours = data.records
+            .filter((r) => r.sleep_hours !== null)
+            .map((r) => r.sleep_hours);
+        const exerciseMinutes = data.records
+            .filter((r) => r.exercise_minutes !== null)
+            .map((r) => r.exercise_minutes);
+
+        const avgEmotion =
+            emotionScores.length > 0
+                ? (emotionScores.reduce((a, b) => a + b, 0) / emotionScores.length).toFixed(1)
+                : null;
+        const avgMotivation =
+            motivationScores.length > 0
+                ? (motivationScores.reduce((a, b) => a + b, 0) / motivationScores.length).toFixed(1)
+                : null;
+        const avgSleep =
+            sleepHours.length > 0
+                ? (sleepHours.reduce((a, b) => a + b, 0) / sleepHours.length).toFixed(1)
+                : null;
+        const totalExercise =
+            exerciseMinutes.length > 0
+                ? exerciseMinutes.reduce((a, b) => a + b, 0)
+                : 0;
+
+        // 気象データの平均
+        const avgTemp =
+            data.weather.length > 0
+                ? (data.weather.reduce((a, b) => a + b.temperature, 0) / data.weather.length).toFixed(1)
+                : null;
+        const avgHumidity =
+            data.weather.length > 0
+                ? (data.weather.reduce((a, b) => a + b.humidity, 0) / data.weather.length).toFixed(1)
+                : null;
+
+        // AI分析用のプロンプト作成
+        const prompt = `
+あなたはウェルネスと健康管理の専門家です。
+以下のユーザーデータを分析し、洞察と推奨事項を提供してください。
+
+**分析期間**: ${data.period.days}日間 (${new Date(data.period.startDate).toLocaleDateString('ja-JP')} 〜 ${new Date(data.period.endDate).toLocaleDateString('ja-JP')})
+**記録数**: ${data.records.length}件
+
+**基本統計**:
+- 平均気分スコア: ${avgEmotion !== null ? avgEmotion + '/10' : 'データなし'}
+- 平均モチベーションスコア: ${avgMotivation !== null ? avgMotivation + '/10' : 'データなし'}
+- 平均睡眠時間: ${avgSleep !== null ? avgSleep + '時間' : 'データなし'}
+- 総運動時間: ${totalExercise}分
+
+**気象データ** (平均):
+- 気温: ${avgTemp !== null ? avgTemp + '°C' : 'データなし'}
+- 湿度: ${avgHumidity !== null ? avgHumidity + '%' : 'データなし'}
+
+**分析回答データ**:
+${data.analysis.map(a => `- ${a.category_name}: ${a.avg_score !== null ? a.avg_score + '/10' : 'データなし'} (${a.answer_count}回答)`).join('\n')}
+
+**要件**:
+1. データの傾向を分析してください
+2. 気象条件と気分・モチベーションの相関関係を考察してください
+3. 睡眠、運動、食事が気分に与える影響を考察してください
+4. 具体的で実践可能な推奨事項を3〜5個提供してください
+5. ポジティブで支援的なトーンを使ってください
+
+**重要**: 以下のJSON形式で回答し、**JSON以外のテキストを含めないでください**。マークダウンのコードブロック(\`\`\`json)も使わないでください。
+
+{
+  "summary": "全体的な状態の要約（100文字程度）",
+  "trends": {
+    "emotion": {
+      "trend": "improving | stable | declining",
+      "description": "気分の傾向に関する説明"
+    },
+    "motivation": {
+      "trend": "improving | stable | declining",
+      "description": "モチベーションの傾向に関する説明"
+    }
+  },
+  "correlations": [
+    "相関関係の考察1（例: 気温と気分の関係）",
+    "相関関係の考察2（例: 睡眠とモチベーションの関係）"
+  ],
+  "recommendations": [
+    "具体的な推奨事項1",
+    "具体的な推奨事項2",
+    "具体的な推奨事項3"
+  ]
+}
+`;
+
+        // AIに分析を依頼
+        console.log('AI分析プロンプト送信...');
+        const response = await generateText(prompt);
+        console.log('AI分析レスポンス受信:', response.substring(0, 200));
+
+        // JSONパース（マークダウンコードブロックを除去）
+        let jsonText = response.trim();
+        jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
+
+        console.log('JSONパース前のテキスト:', jsonText.substring(0, 200));
+
+        const analysisResult = JSON.parse(jsonText);
+        console.log('AI分析成功:', analysisResult);
+
+        return analysisResult;
+    } catch (error) {
+        console.error("AI分析エラー（詳細）:", error);
+        if (error instanceof Error) {
+            console.error("エラーメッセージ:", error.message);
+            console.error("エラースタック:", error.stack);
+        }
+        throw error;
+    }
+}
+
+/**
  * 分析観点に基づく質問を生成
  */
 export async function generateAnalysisQuestions(

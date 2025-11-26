@@ -244,7 +244,7 @@ Mood Tracker（調子記録アプリ）
 - ✅ WeatherAPIの使用方法
 - ✅ 気象データの取得と保存（記録作成時に自動）
 - ✅ 気象データとユーザーデータの関連付け
-- ✅ 記録詳細画面での気象データ表示
+- ✅ 記録詳細画面での気象データ表示（完全実装）
 - ✅ グラフでの気象データ可視化
 
 **学習内容**
@@ -253,15 +253,21 @@ Mood Tracker（調子記録アプリ）
 - データのキャッシング
 - 非同期処理
 - 気象データの可視化
+- 記録IDに紐づく気象データ取得
 
 **実装した機能**
-- weatherService.ts（getCurrentWeather, getWeatherByCoordinates, getWeatherByRecordId）
-- WeatherDataModel.ts（create, getByRecordId）
-- weatherController.ts（getCurrentWeatherData, getWeatherByRecordId）
-- 記録作成時の自動気象データ取得
-- RecordDetailでの気象情報カード表示
+- バックエンド:
+  - weatherService.ts（getCurrentWeather, getWeatherByCoordinates）
+  - WeatherDataModel.ts（create, getByUserAndDate, getByRecordId）
+  - weatherController.ts（getCurrentWeatherData, getWeatherByRecordId）
+  - weatherRoutes.ts（GET /api/weather/record/:recordId）
+  - 記録作成時の自動気象データ取得（非同期処理）
+- フロントエンド:
+  - weatherService.ts（getCurrentWeather, getWeatherByRecordId）
+  - RecordDetail.tsxでの気象情報カード表示（完全実装）
+  - RecordForm.tsxでの現在の気象データ表示
 
-**完了日**: 2025年11月13日（記録詳細での表示）、2025年11月14日（グラフ表示改善）
+**完了日**: 2025年11月13日（記録作成時の自動取得、記録詳細での表示）、2025年11月14日（グラフ表示改善）、2025年11月26日（記録詳細画面の完全実装）
 
 ---
 
@@ -329,16 +335,32 @@ Mood Tracker（調子記録アプリ）
 
 **完了日**: 2025年11月21日
 
-### ステップ4-3: データ分析機能 ❌ **未実装**（45分）
-- ❌ 蓄積データの集計処理
-- ❌ AIによる傾向分析
-- ❌ 相関関係の抽出
+### ステップ4-3: データ分析機能 ✅ **完了**（45分）
+- ✅ 蓄積データの集計処理（記録データ、気象データ、分析回答データ）
+- ✅ AIによる傾向分析（Gemini API使用）
+- ✅ 相関関係の抽出（気象条件と気分・モチベーションの関係）
 
 **学習内容**
-- SQLによるデータ集計
-- 統計的な分析手法の基礎
-- AIを活用した洞察の抽出
-- 結果の構造化と保存
+- SQLによるデータ集計（JOIN、AVG、COUNT）
+- 統計的な分析手法の基礎（平均値、傾向）
+- AIを活用した洞察の抽出（プロンプト設計）
+- 結果の構造化（JSON形式）
+
+**実装した機能**
+- バックエンド:
+  - AnalysisModel.getAnalysisData(): 記録データ、気象データ、分析回答データを包括的に取得
+  - aiService.analyzeData(): Gemini APIを使用してデータを分析
+  - analysisController.analyzeUserData(): 分析APIエンドポイント
+  - GET /api/analysis/analyze?days=14: AI分析エンドポイント
+- フロントエンド: 今後実装予定
+
+**分析結果の構造**
+- summary: 全体的な状態の要約
+- trends: 気分・モチベーションの傾向（improving/stable/declining）
+- correlations: 相関関係の考察
+- recommendations: 具体的な推奨事項
+
+**完了日**: 2025年11月26日
 
 ### ステップ4-4: アドバイス生成機能 ❌ **未実装**（45分）
 - ❌ 現在の状態に基づくアドバイス生成
@@ -450,13 +472,13 @@ Mood Tracker（調子記録アプリ）
 - ✅ **Phase 1 完了**（3/3ステップ） - 2025年11月上旬
 - ✅ **Phase 2 完了**（4/4ステップ） - 2025年11月7日～13日
 - ✅ **Phase 3 完了**（5/5ステップ） - 2025年11月13日～14日
-- 🔄 **Phase 4 進行中**（2/4ステップ） - 2025年11月21日
+- 🔄 **Phase 4 進行中**（3/4ステップ） - 2025年11月21日〜26日
 - ❌ Phase 5（0/3ステップ）
 - ❌ Phase 6（0/2ステップ）
 
-**現在の進捗率**: 14/21ステップ = **約67%完了**
+**現在の進捗率**: 15/21ステップ = **約71%完了**
 
-**次のマイルストーン**: Phase 4ステップ4-3（データ分析機能）
+**次のマイルストーン**: Phase 4ステップ4-4（アドバイス生成機能）
 
 ---
 
@@ -464,12 +486,13 @@ Mood Tracker（調子記録アプリ）
 
 ロードマップ以外に実装された機能：
 
-### 記録詳細画面
+### 記録詳細画面 ✅ **完全実装**
 - RecordDetail.tsx / RecordDetail.css
-- 記録の全データ表示
-- スコアのバー形式表示
-- 気象情報カードの表示
+- 記録の全データ表示（日時、睡眠、食事、運動、気分、メモ）
+- スコアのバー形式表示（視覚的な進捗バー）
+- 気象情報カードの完全実装（記録時刻に最も近い気象データを表示）
 - 一覧へ戻る機能
+- **完了日**: 2025年11月26日（気象データ表示機能の完全実装）
 
 ### 記録一覧画面
 - RecordList.tsx / RecordList.css
@@ -510,12 +533,13 @@ Mood Tracker（調子記録アプリ）
 - ✅ エラーハンドリング
 - ✅ 外部API連携（WeatherAPI）
 
-### AI統合 🔄 習得中（基礎）
+### AI統合 🔄 習得中（基礎〜中級）
 - ✅ LLM API（Gemini）の基礎
-- ✅ プロンプトエンジニアリングの基礎
+- ✅ プロンプトエンジニアリングの基礎〜中級
 - ✅ 構造化されたレスポンス取得（JSON）
 - ✅ AIによる質問生成
-- ❌ AIを活用したデータ分析（未習得）
+- ✅ AIを活用したデータ分析
+- ✅ 複数データソースの統合分析
 - ❌ パーソナライズ機能の実装（未習得）
 
 ### テストとCI/CD ❌ 未習得
@@ -569,5 +593,5 @@ Mood Tracker（調子記録アプリ）
 
 ---
 
-**最終更新日**: 2025年11月21日  
-**更新内容**: Phase 4のステップ4-1、4-2を完了状態に更新、AI質問生成機能の実装詳細を追記、進捗率を67%に更新
+**最終更新日**: 2025年11月26日  
+**更新内容**: Phase 4のステップ4-3（データ分析機能）を完了状態に更新、AI分析機能の実装詳細を追記、進捗率も71%に更新、記録詳細画面の気象データ表示機能を完全実装として追記

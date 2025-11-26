@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCategories, getQuestions, saveAnswers, generateQuestions, getCategoryScores, getCategoryTrends, getRandomQuestions } from '../controllers/analysisController';
+import { getCategories, getQuestions, saveAnswers, generateQuestions, getCategoryScores, getCategoryTrends, getRandomQuestions, analyzeUserData } from '../controllers/analysisController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -27,5 +27,8 @@ router.get('/trends', getCategoryTrends);
 
 // GET /api/analysis/random - ランダムな質問取得（記録入力用）
 router.get('/random', getRandomQuestions);
+
+// GET /api/analysis/analyze - ユーザーデータのAI分析
+router.get('/analyze', analyzeUserData);
 
 export default router;

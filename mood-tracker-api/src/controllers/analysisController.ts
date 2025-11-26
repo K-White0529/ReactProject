@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AnalysisModel } from '../models/Analysis';
-import { generateAnalysisQuestions } from '../services/aiService';
+import { generateAnalysisQuestions, analyzeData } from '../services/aiService';
 
 /**
  * 分析観点一覧を取得
@@ -315,6 +315,63 @@ export async function getRandomQuestions(req: Request, res: Response): Promise<v
     res.status(500).json({
       success: false,
       message: 'ランダム質問の取得に失敗しました'
+    });
+  }
+}
+
+/**
+ * ユーザーデータをAIで分析
+ */
+export async function analyzeUserData(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: '認証が必要です'
+      });
+      return;
+    }
+
+    // クエリパラメータから分析期間（日数）を取得
+    const days = parseInt(req.query.days as string) || 14;
+
+    if (days < 1 || days > 90) {
+      res.status(400).json({
+        success: false,
+        message: '分析期間は1〜90日の範囲で指定してください'
+      });
+      return;
+    }
+
+    // データを取得
+    const data = await AnalysisModel.getAnalysisData(userId, days);
+
+    // AIで分析
+    const analysisResult = await analyzeData(data);
+
+    // エラーがある場合
+    if (analysisResult.error) {
+      res.status(400).json({
+        success: false,
+        message: analysisResult.error
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        period: data.period,
+        analysis: analysisResult
+      }
+    });
+  } catch (error) {
+    console.error('データ分析エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'データの分析に失敗しました'
     });
   }
 }

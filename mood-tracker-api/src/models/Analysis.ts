@@ -175,4 +175,80 @@ export class AnalysisModel {
     );
     return result.rows;
   }
+
+  /**
+   * AI分析用の包括的なデータを取得
+   * ユーザーの記録データ、気象データ、分析回答データを期間指定で取得
+   */
+  static async getAnalysisData(userId: number, days: number = 14) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // 記録データ（気分、モチベーション、睡眠、運動など）
+    const recordsResult = await pool.query(
+      `SELECT
+        r.id,
+        r.recorded_at,
+        r.sleep_hours,
+        r.sleep_quality,
+        r.meal_quality,
+        r.meal_regularity,
+        r.exercise_minutes,
+        r.exercise_intensity,
+        r.emotion_score,
+        r.motivation_score
+       FROM records r
+       WHERE r.user_id = $1
+         AND r.recorded_at >= $2
+         AND r.recorded_at <= $3
+       ORDER BY r.recorded_at`,
+      [userId, startDate, endDate]
+    );
+
+    // 気象データ
+    const weatherResult = await pool.query(
+      `SELECT
+        w.recorded_at,
+        w.temperature,
+        w.humidity,
+        w.weather_condition,
+        w.location
+       FROM weather_data w
+       WHERE w.user_id = $1
+         AND w.recorded_at >= $2
+         AND w.recorded_at <= $3
+       ORDER BY w.recorded_at`,
+      [userId, startDate, endDate]
+    );
+
+    // 分析回答データ（観点別の平均スコア）
+    const analysisResult = await pool.query(
+      `SELECT
+        c.code as category_code,
+        c.name as category_name,
+        ROUND(AVG(aa.answer_score)::numeric, 1) as avg_score,
+        COUNT(aa.id) as answer_count
+       FROM analysis_categories c
+       LEFT JOIN analysis_questions q ON c.id = q.category_id AND q.is_active = true
+       LEFT JOIN analysis_answers aa ON q.id = aa.question_id
+         AND aa.user_id = $1
+         AND aa.answered_at >= $2
+         AND aa.answered_at <= $3
+       GROUP BY c.id, c.code, c.name
+       ORDER BY c.id`,
+      [userId, startDate, endDate]
+    );
+
+    return {
+      period: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        days
+      },
+      records: recordsResult.rows,
+      weather: weatherResult.rows,
+      analysis: analysisResult.rows
+    };
+  }
 }
