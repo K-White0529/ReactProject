@@ -4,6 +4,7 @@ import type { Record, RecordStats, ChartData } from '../types';
 import { HiChartBar, HiCalendar, HiEmojiHappy, HiLightningBolt, HiPlus } from 'react-icons/hi';
 import MoodChart from './charts/MoodChart';
 import WeatherChart from './charts/WeatherChart';
+import AdviceCard from './AdviceCard';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -96,6 +97,9 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			<h1 className="page-title">ダッシュボード</h1>
 
 			{error && <div className="error-message">{error}</div>}
+
+			{/* アドバイスカード */}
+			<AdviceCard onNavigateToHistory={() => handleQuickAction('advice-history')} />
 
 			{/* グラフ範囲選択 */}
 			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
@@ -191,6 +195,10 @@ function Dashboard({ onNavigate }: DashboardProps) {
 					<button className="action-button" onClick={() => handleQuickAction('analysis')}>
 						<HiChartBar size={24} />
 						<span>自己分析を行う</span>
+					</button>
+					<button className="action-button" onClick={() => handleQuickAction('analysis-result')}>
+						<HiLightningBolt size={24} />
+						<span>AI分析結果を見る</span>
 					</button>
 				</div>
 			</div>

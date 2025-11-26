@@ -1,0 +1,386 @@
+.analysis-result-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.analysis-result-header {
+  margin-bottom: 2rem;
+}
+
+.analysis-result-header h1 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-period {
+  color: #666;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: #FF6B9D;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.3s;
+  margin-bottom: 1rem;
+}
+
+.back-btn:hover {
+  background: #FFF0F5;
+}
+
+/* 分析期間選択とリフレッシュボタン */
+.analysis-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.period-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.period-btn {
+  padding: 0.5rem 1.25rem;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  background: white;
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.period-btn:hover {
+  border-color: #FF6B9D;
+  color: #FF6B9D;
+}
+
+.period-btn.active {
+  background: linear-gradient(135deg, #FF6B9D 0%, #C239B3 100%);
+  border-color: #FF6B9D;
+  color: white;
+}
+
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  background: white;
+  color: #667eea;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+/* カード共通スタイル */
+.analysis-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #333;
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #F5F5F5;
+}
+
+/* サマリーカード */
+.summary-card .card-title {
+  color: #667eea;
+}
+
+.summary-text {
+  color: #333;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* トレンドカード */
+.trends-card .card-title {
+  color: #FF6B9D;
+}
+
+.trends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.trend-item {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #FFF0F5 0%, #F0E6FF 100%);
+  border-radius: 12px;
+}
+
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.trend-header h3 {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.trend-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.trend-badge.improving {
+  background: linear-gradient(135deg, #6BCB77 0%, #4D96A9 100%);
+  color: white;
+}
+
+.trend-badge.declining {
+  background: linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%);
+  color: white;
+}
+
+.trend-badge.stable {
+  background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+  color: white;
+}
+
+.trend-icon {
+  flex-shrink: 0;
+}
+
+.trend-description {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* 相関関係カード */
+.correlations-card .card-title {
+  color: #B4A7D6;
+}
+
+.correlations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.correlation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  border-radius: 8px;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  transition: all 0.3s;
+}
+
+.correlation-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(180, 167, 214, 0.2);
+}
+
+.correlation-item:last-child {
+  margin-bottom: 0;
+}
+
+.correlation-bullet {
+  color: #B4A7D6;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* 推奨事項カード */
+.recommendations-card .card-title {
+  color: #FFD93D;
+}
+
+.recommendations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFEAA7 100%);
+  border-radius: 8px;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  transition: all 0.3s;
+}
+
+.recommendation-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 217, 61, 0.3);
+}
+
+.recommendation-item:last-child {
+  margin-bottom: 0;
+}
+
+.recommendation-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #FFD93D 0%, #FFA500 100%);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* エラーと空の状態 */
+.error-container,
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.error-message {
+  color: #FF6B6B;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.empty-state p {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+/* ローディング */
+.loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .analysis-result-container {
+    padding: 1rem;
+  }
+
+  .analysis-result-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .analysis-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .period-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .period-btn {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .refresh-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .analysis-card {
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.15rem;
+  }
+
+  .trends-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trend-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .summary-text {
+    font-size: 0.95rem;
+  }
+
+  .correlation-item,
+  .recommendation-item {
+    font-size: 0.9rem;
+  }
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

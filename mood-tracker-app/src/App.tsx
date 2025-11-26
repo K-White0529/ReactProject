@@ -6,6 +6,8 @@ import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
 import RecordDetail from './components/RecordDetail';
 import AnalysisForm from './components/AnalysisForm';
+import AnalysisResult from './components/AnalysisResult';
+import AdviceHistory from './components/AdviceHistory';
 import Layout from './components/layout/Layout';
 import { isAuthenticated } from './services/authService';
 
@@ -47,6 +49,8 @@ function App() {
         return <RecordForm onNavigate={handleNavigate} />;
       case 'analysis':
         return <AnalysisForm />;
+      case 'analysis-result':
+        return <AnalysisResult onNavigate={handleNavigate} />;
       case 'record-list':
         return <RecordList onNavigate={handleNavigate} />;
       case 'record-detail':
@@ -55,6 +59,8 @@ function App() {
         ) : (
           <Dashboard onNavigate={handleNavigate} />
         );
+      case 'advice-history':
+        return <AdviceHistory onNavigate={handleNavigate} />;
       default:
         return <Dashboard />;
     }

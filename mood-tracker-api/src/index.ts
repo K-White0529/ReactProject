@@ -36,6 +36,9 @@ app.use((req, res) => {
 });
 
 // サーバー起動
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で起動しました`);
 });
+
+// タイムアウト設定（AI分析用に延長）
+server.timeout = 120000; // 120秒（2分）
