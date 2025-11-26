@@ -7,8 +7,7 @@ import {
   HiUser,
   HiHome,
   HiViewList,
-  HiSparkles,
-  HiLightningBolt
+  HiSparkles
 } from 'react-icons/hi';
 
 interface SidebarProps {
@@ -94,15 +93,6 @@ function Sidebar({ expanded, onToggle, onLogout, isMobile, onClose, currentPage,
         >
           <HiChartBar size={24} className="nav-icon" />
           {expanded && <span className="nav-label">分析</span>}
-        </button>
-
-        <button
-          className={`nav-item ${currentPage === 'analysis-result' ? 'active' : ''}`}
-          onClick={() => handleNavigation('analysis-result')}
-          title="AI分析結果"
-        >
-          <HiLightningBolt size={24} className="nav-icon" />
-          {expanded && <span className="nav-label">AI分析結果</span>}
         </button>
 
         <button

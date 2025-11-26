@@ -276,6 +276,23 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
+/* グラフの空の状態 */
+.chart-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  border-radius: 12px;
+}
+
+.chart-empty-state p {
+  color: #6C757D;
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .charts-section {

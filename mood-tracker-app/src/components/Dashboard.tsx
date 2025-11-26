@@ -102,40 +102,44 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			<AdviceCard onNavigateToHistory={() => handleQuickAction('advice-history')} />
 
 			{/* グラフ範囲選択 */}
-			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
-				<div className="chart-range-selector">
-					<label htmlFor="chart-range">表示範囲：</label>
-					<select
-						id="chart-range"
-						value={chartRange}
-						onChange={(e) => setChartRange(e.target.value)}
-						className="range-select"
-					>
-						<option value="today">今日のデータ</option>
-						<option value="3days">直近3日間</option>
-						<option value="1week">直近1週間</option>
-						<option value="3weeks">直近3週間</option>
-					</select>
-				</div>
-			)}
+			<div className="chart-range-selector">
+				<label htmlFor="chart-range">表示範囲：</label>
+				<select
+					id="chart-range"
+					value={chartRange}
+					onChange={(e) => setChartRange(e.target.value)}
+					className="range-select"
+				>
+					<option value="today">今日のデータ</option>
+					<option value="3days">直近3日間</option>
+					<option value="1week">直近1週間</option>
+					<option value="3weeks">直近3週間</option>
+				</select>
+			</div>
 
 			{/* グラフセクション */}
-			{chartData && (chartData.mood.length > 0 || chartData.weather.length > 0) && (
-				<div className="charts-section">
-					{chartData.mood.length > 0 && (
-						<div className="chart-card">
-							<h3 className="chart-title">気分とモチベーションの推移</h3>
-							<MoodChart data={chartData.mood} />
-						</div>
-					)}
-					{chartData.weather.length > 0 && (
-						<div className="chart-card">
-							<h3 className="chart-title">気温と湿度の推移</h3>
-							<WeatherChart data={chartData.weather} />
+			<div className="charts-section">
+				<div className="chart-card">
+					<h3 className="chart-title">気分とモチベーションの推移</h3>
+					{chartData && chartData.mood.length > 0 ? (
+						<MoodChart data={chartData.mood} />
+					) : (
+						<div className="chart-empty-state">
+							<p>この期間のデータがありません</p>
 						</div>
 					)}
 				</div>
-			)}
+				<div className="chart-card">
+					<h3 className="chart-title">気温と湿度の推移</h3>
+					{chartData && chartData.weather.length > 0 ? (
+						<WeatherChart data={chartData.weather} />
+					) : (
+						<div className="chart-empty-state">
+							<p>この期間のデータがありません</p>
+						</div>
+					)}
+				</div>
+			</div>
 
 			{/* 統計パネル */}
 			<div className="stats-grid">
@@ -194,11 +198,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 					</button>
 					<button className="action-button" onClick={() => handleQuickAction('analysis')}>
 						<HiChartBar size={24} />
-						<span>自己分析を行う</span>
-					</button>
-					<button className="action-button" onClick={() => handleQuickAction('analysis-result')}>
-						<HiLightningBolt size={24} />
-						<span>AI分析結果を見る</span>
+						<span>分析を見る</span>
 					</button>
 				</div>
 			</div>

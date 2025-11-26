@@ -1,147 +1,313 @@
 import { useState, useEffect } from 'react';
-import { getActiveQuestions, saveAnswers } from '../services/analysisService';
-import type { AnalysisQuestion, AnalysisAnswerInput } from '../types';
+import { getCategoryScores, getCategoryTrends, analyzeUserData, type CategoryScore, type CategoryTrend, type AnalysisResponse } from '../services/analysisService';
+import { HiArrowLeft, HiTrendingUp, HiTrendingDown, HiMinus, HiLightBulb, HiChartBar, HiRefresh } from 'react-icons/hi';
+import CategoryRadarChart from './charts/CategoryRadarChart';
+import CategoryTrendsChart from './charts/CategoryTrendsChart';
 import './AnalysisForm.css';
 
-function AnalysisForm() {
-  const [questions, setQuestions] = useState<AnalysisQuestion[]>([]);
-  const [answers, setAnswers] = useState<Map<number, number>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+interface AnalysisFormProps {
+	onNavigate?: (page: string) => void;
+}
 
-  useEffect(() => {
-    loadQuestions();
-  }, []);
+function AnalysisForm({ onNavigate }: AnalysisFormProps) {
+	const [period, setPeriod] = useState<string>('1week');
+	const [categoryScores, setCategoryScores] = useState<CategoryScore[]>([]);
+	const [categoryTrends, setCategoryTrends] = useState<CategoryTrend[]>([]);
+	const [analysisData, setAnalysisData] = useState<AnalysisResponse | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [aiLoading, setAiLoading] = useState(true);
+	const [error, setError] = useState('');
+	const [aiError, setAiError] = useState('');
 
-  const loadQuestions = async () => {
-    try {
-      setLoading(true);
-      const data = await getActiveQuestions();
-      setQuestions(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '質問の取得に失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
+	useEffect(() => {
+		loadData();
+	}, [period]);
 
-  const handleAnswerChange = (questionId: number, score: number) => {
-    const newAnswers = new Map(answers);
-    newAnswers.set(questionId, score);
-    setAnswers(newAnswers);
-  };
+	const loadData = async () => {
+		try {
+			setLoading(true);
+			setError('');
+			setAiLoading(true);
+			setAiError('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess(false);
+			// 期間をdaysに変換
+			const daysMap: Record<string, number> = {
+				'today': 1,
+				'3days': 3,
+				'1week': 7,
+				'3weeks': 21
+			};
+			const days = daysMap[period] || 7;
 
-    // すべての質問に回答しているかチェック
-    if (answers.size !== questions.length) {
-      setError('すべての質問に回答してください');
-      return;
-    }
+			// グラフデータを先に読み込む
+			const [scores, trends] = await Promise.all([
+				getCategoryScores(period),
+				getCategoryTrends(period)
+			]);
 
-    setSaving(true);
+			setCategoryScores(scores);
+			setCategoryTrends(trends);
+			setLoading(false);
 
-    try {
-      const answerList: AnalysisAnswerInput[] = Array.from(answers.entries()).map(
-        ([question_id, answer_score]) => ({
-          question_id,
-          answer_score
-        })
-      );
+			// AI分析は別途実行
+			try {
+				const aiAnalysis = await analyzeUserData(days);
+				setAnalysisData(aiAnalysis);
+				setAiLoading(false);
+			} catch (aiErr) {
+				console.error('AI分析エラー:', aiErr);
+				setAiError(aiErr instanceof Error ? aiErr.message : 'AI分析に失敗しました');
+				setAiLoading(false);
+			}
+		} catch (err) {
+			console.error('データ取得エラー:', err);
+			setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+			setLoading(false);
+			setAiLoading(false);
+		}
+	};
 
-      await saveAnswers(answerList);
-      setSuccess(true);
-      setAnswers(new Map());
+	const handleBack = () => {
+		if (onNavigate) {
+			onNavigate('dashboard');
+		}
+	};
 
-      // 3秒後に成功メッセージを非表示
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '回答の保存に失敗しました');
-    } finally {
-      setSaving(false);
-    }
-  };
+	const handleRefresh = async () => {
+		await loadData();
+	};
 
-  // 観点ごとに質問をグループ化
-  const groupedQuestions = questions.reduce((acc, question) => {
-    const categoryName = question.category_name || '未分類';
-    if (!acc[categoryName]) {
-      acc[categoryName] = [];
-    }
-    acc[categoryName].push(question);
-    return acc;
-  }, {} as Record<string, AnalysisQuestion[]>);
+	const getPeriodLabel = (p: string) => {
+		switch (p) {
+			case 'today':
+				return '今日';
+			case '3days':
+				return '直近3日間';
+			case '1week':
+				return '直近1週間';
+			case '3weeks':
+				return '直近3週間';
+			default:
+				return '';
+		}
+	};
 
-  if (loading) {
-    return <div className="loading">読み込み中...</div>;
-  }
+	const getTrendIcon = (trend: 'improving' | 'stable' | 'declining') => {
+		switch (trend) {
+			case 'improving':
+				return <HiTrendingUp size={28} className="trend-icon improving" />;
+			case 'declining':
+				return <HiTrendingDown size={28} className="trend-icon declining" />;
+			case 'stable':
+				return <HiMinus size={28} className="trend-icon stable" />;
+		}
+	};
 
-  if (questions.length === 0) {
-    return (
-      <div className="analysis-form-container">
-        <h1 className="page-title">自己分析</h1>
-        <div className="empty-state">
-          <p>現在、利用可能な質問がありません。</p>
-        </div>
-      </div>
-    );
-  }
+	const getTrendLabel = (trend: 'improving' | 'stable' | 'declining') => {
+		switch (trend) {
+			case 'improving':
+				return '改善傾向';
+			case 'declining':
+				return '低下傾向';
+			case 'stable':
+				return '安定';
+		}
+	};
 
-  return (
-    <div className="analysis-form-container">
-      <h1 className="page-title">自己分析</h1>
-      <p className="page-description">
-        以下の質問に1〜10の段階で回答してください。あなたの調子を分析するために使用されます。
-      </p>
+	const getTrendClass = (trend: 'improving' | 'stable' | 'declining') => {
+		switch (trend) {
+			case 'improving':
+				return 'trend-badge improving';
+			case 'declining':
+				return 'trend-badge declining';
+			case 'stable':
+				return 'trend-badge stable';
+		}
+	};
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">回答を保存しました！</div>}
+	if (loading) {
+		return (
+			<div className="analysis-container">
+				<div className="loading">分析中...</div>
+			</div>
+		);
+	}
 
-      <form onSubmit={handleSubmit} className="analysis-form">
-        {Object.entries(groupedQuestions).map(([categoryName, categoryQuestions]) => (
-          <section key={categoryName} className="form-section">
-            <h2 className="section-title">{categoryName}</h2>
+	return (
+		<div className="analysis-container">
+			<div className="analysis-header">
+				<button className="back-btn" onClick={handleBack}>
+					<HiArrowLeft size={20} />
+					戻る
+				</button>
+				<h1>分析結果</h1>
+			</div>
 
-            {categoryQuestions.map((question) => (
-              <div key={question.id} className="question-item">
-                <label htmlFor={`question-${question.id}`} className="question-label">
-                  {question.question_text}
-                  {answers.has(question.id) && (
-                    <span className="slider-value">{answers.get(question.id)}</span>
-                  )}
-                </label>
-                <input
-                  type="range"
-                  id={`question-${question.id}`}
-                  min="1"
-                  max="10"
-                  value={answers.get(question.id) ?? 5}
-                  onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value))}
-                  className="slider"
-                />
-                <div className="slider-labels">
-                  <span>1 低い</span>
-                  <span>5</span>
-                  <span>10 高い</span>
-                </div>
-              </div>
-            ))}
-          </section>
-        ))}
+			{error && <div className="error-message">{error}</div>}
 
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? '保存中...' : '回答を保存'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+			{/* 期間選択とリフレッシュボタン */}
+			<div className="analysis-controls">
+				<div className="period-buttons">
+					<button 
+						className={`period-btn ${period === 'today' ? 'active' : ''}`}
+						onClick={() => setPeriod('today')}
+					>
+						今日
+					</button>
+					<button 
+						className={`period-btn ${period === '3days' ? 'active' : ''}`}
+						onClick={() => setPeriod('3days')}
+					>
+						直近3日間
+					</button>
+					<button 
+						className={`period-btn ${period === '1week' ? 'active' : ''}`}
+						onClick={() => setPeriod('1week')}
+					>
+						1週間
+					</button>
+					<button 
+						className={`period-btn ${period === '3weeks' ? 'active' : ''}`}
+						onClick={() => setPeriod('3weeks')}
+					>
+						3週間
+					</button>
+				</div>
+				<button className="refresh-btn" onClick={handleRefresh}>
+					<HiRefresh size={20} />
+					再分析
+				</button>
+			</div>
+
+			{/* レーダーチャート */}
+			<div className="analysis-card">
+				<h2 className="card-title">
+					<HiChartBar size={24} />
+					観点別スコア（{getPeriodLabel(period)}）
+				</h2>
+				<div className="chart-wrapper">
+					<CategoryRadarChart data={categoryScores} />
+				</div>
+			</div>
+
+			{/* スコア遷移グラフ */}
+			<div className="analysis-card">
+				<h2 className="card-title">
+					<HiTrendingUp size={24} />
+					スコアの遷移（{getPeriodLabel(period)}）
+				</h2>
+				<div className="chart-wrapper">
+					<CategoryTrendsChart data={categoryTrends} />
+				</div>
+			</div>
+
+			{/* AI分析結果 */}
+			{aiLoading ? (
+				<div className="analysis-card ai-loading-card">
+					<h2 className="card-title">
+						<HiChartBar size={24} />
+						AI分析結果
+					</h2>
+					<div className="ai-loading-state">
+						<div className="loading-spinner"></div>
+						<p>分析中...</p>
+						<p className="loading-hint">AIがデータを分析しています。しばらくお待ちください。</p>
+					</div>
+				</div>
+			) : aiError ? (
+				<div className="analysis-card ai-error-card">
+					<h2 className="card-title">
+						<HiChartBar size={24} />
+						AI分析結果
+					</h2>
+					<div className="ai-error-state">
+						<p className="error-message">{aiError}</p>
+						<button className="retry-btn" onClick={handleRefresh}>
+							<HiRefresh size={20} />
+							再試行
+						</button>
+					</div>
+				</div>
+			) : analysisData ? (
+				<>
+					{/* サマリーセクション */}
+					<div className="analysis-card summary-card">
+						<h2 className="card-title">
+							<HiChartBar size={24} />
+							全体の状態
+						</h2>
+						<p className="summary-text">{analysisData.analysis.summary}</p>
+					</div>
+
+					{/* トレンドセクション */}
+					<div className="analysis-card trends-card">
+						<h2 className="card-title">
+							<HiTrendingUp size={24} />
+							傾向分析
+						</h2>
+						<div className="trends-grid">
+							<div className="trend-item">
+								<div className="trend-header">
+									<h3>気分の傾向</h3>
+									<div className={getTrendClass(analysisData.analysis.trends.emotion.trend)}>
+										{getTrendIcon(analysisData.analysis.trends.emotion.trend)}
+										<span>{getTrendLabel(analysisData.analysis.trends.emotion.trend)}</span>
+									</div>
+								</div>
+								<p className="trend-description">{analysisData.analysis.trends.emotion.description}</p>
+							</div>
+							<div className="trend-item">
+								<div className="trend-header">
+									<h3>モチベーションの傾向</h3>
+									<div className={getTrendClass(analysisData.analysis.trends.motivation.trend)}>
+										{getTrendIcon(analysisData.analysis.trends.motivation.trend)}
+										<span>{getTrendLabel(analysisData.analysis.trends.motivation.trend)}</span>
+									</div>
+								</div>
+								<p className="trend-description">{analysisData.analysis.trends.motivation.description}</p>
+							</div>
+						</div>
+					</div>
+
+					{/* 相関関係セクション */}
+					{analysisData.analysis.correlations.length > 0 && (
+						<div className="analysis-card correlations-card">
+							<h2 className="card-title">
+								<HiChartBar size={24} />
+								発見された相関関係
+							</h2>
+							<ul className="correlations-list">
+								{analysisData.analysis.correlations.map((correlation, index) => (
+									<li key={index} className="correlation-item">
+										<span className="correlation-bullet">•</span>
+										<span>{correlation}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+
+					{/* 推奨事項セクション */}
+					{analysisData.analysis.recommendations.length > 0 && (
+						<div className="analysis-card recommendations-card">
+							<h2 className="card-title">
+								<HiLightBulb size={24} />
+								推奨事項
+							</h2>
+							<ul className="recommendations-list">
+								{analysisData.analysis.recommendations.map((recommendation, index) => (
+									<li key={index} className="recommendation-item">
+										<div className="recommendation-number">{index + 1}</div>
+										<span>{recommendation}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</>
+			) : null}
+		</div>
+	);
 }
 
 export default AnalysisForm;
