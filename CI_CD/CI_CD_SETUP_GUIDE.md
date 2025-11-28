@@ -120,29 +120,54 @@ PostgreSQLサービスコンテナを起動し、ユニットテストを実行�
 
 ## 環境変数の設定
 
-### フロントエンド
+### 必須：GitHub Secretsの設定
 
-フロントエンドのE2Eテストでは、以下の環境変数が必要です。
+⚠️ **重要**: E2Eテストを実行するために、以下のGitHub Secretsを設定する必要があります。
 
-現時点では、テスト用に固定値を使用しているため、GitHub Secretsの設定は不要です。本番環境のAPIエンドポイントに対してテストを実行する場合は、以下の環境変数を設定します。
+フロントエンドのE2Eテストでは、実際のバックエンドAPIを起動してテストを実行します。そのため、バックエンドAPIで使用する外部APIのキーを設定する必要があります。
 
-```
-VITE_API_URL: バックエンドAPIのURL（例：https://your-api.onrender.com）
-```
+#### 必要なシークレット
 
-設定方法：
+| Name | 説明 | 必須 |
+|------|------|------|
+| `GEMINI_API_KEY` | Google Gemini APIキー | ✅ 必須 |
+| `WEATHER_API_KEY` | WeatherAPIキー | ✅ 必須 |
+
+#### 設定手順
+
+詳細な設定手順は、[GITHUB_SECRETS_SETUP.md](./GITHUB_SECRETS_SETUP.md)を参照してください。
+
+簡易手順：
 1. GitHubリポジトリの「Settings」→「Secrets and variables」→「Actions」
 2. 「New repository secret」をクリック
-3. Nameに`VITE_API_URL`、Secretに値を入力
+3. Nameに`GEMINI_API_KEY`、Secretに実際のAPIキーを入力
+4. 同様に`WEATHER_API_KEY`も追加
+
+#### APIキーの取得方法
+
+- **GEMINI_API_KEY**: https://ai.google.dev/ でAPIキーを取得
+- **WEATHER_API_KEY**: https://www.weatherapi.com/ でアカウント作成後、APIキーを取得
+
+### フロントエンド
+
+フロントエンドのE2Eテストでは、CI環境でバックエンドAPIとPostgreSQLを自動起動します。以下の環境変数がワークフロー内で自動的に設定されます。
+
+```
+VITE_API_URL: http://localhost:3000
+```
 
 ### バックエンド
 
-バックエンドのテストでは、PostgreSQLサービスコンテナを使用するため、GitHub Secretsの設定は不要です。ワークフロー内で以下の環境変数が自動的に設定されます。
+バックエンドのテストでは、PostgreSQLサービスコンテナを使用します。ワークフロー内で以下の環境変数が自動的に設定されます。
 
 ```
 DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mood_tracker_test
 JWT_SECRET: test-secret-key-for-ci
 NODE_ENV: test
+PORT: 3000
+WEATHER_API_URL: https://api.weatherapi.com/v1
+GEMINI_API_KEY: GitHub Secretsから取得
+WEATHER_API_KEY: GitHub Secretsから取得
 ```
 
 ## ワークフローの実行確認
