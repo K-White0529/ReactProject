@@ -16,10 +16,11 @@ Mood Tracker（調子記録アプリ）
 ### 技術スタック
 - **フロントエンド**: React 18 + TypeScript + Vite
 - **バックエンド**: Node.js + Express + TypeScript
-- **データベース**: PostgreSQL
+- **データベース**: PostgreSQL（Supabase）
 - **AI**: Google Gemini API
 - **気象データ**: WeatherAPI
 - **その他**: Axios（HTTP通信）、Chart.js（グラフ描画）
+- **デプロイ**: Vercel（フロントエンド）、Render.com（バックエンド）
 
 ---
 
@@ -96,7 +97,7 @@ Mood Tracker（調子記録アプリ）
 - ✅ analysis_questions（質問マスタ）
 - ✅ analysis_answers（回答データ）
 - ✅ weather_data（気象データ）
-- ✅ ai_advice（アドバイス履歴）
+- ✅ advice_history（アドバイス履歴）
 
 **完了日**: 2025年11月7日
 
@@ -505,12 +506,13 @@ setAiLoading(false); // AI分析完了後に表示
 
 ---
 
-## Phase 6: デプロイと最適化 ❌ **未着手**（0/2ステップ、約90分）
+## Phase 6: デプロイと最適化 ✅ **完了**（2/2ステップ、約90分）
 
-### ステップ6-1: デプロイ準備 ❌ **未実装**（45分）
-- ❌ 本番環境用の設定
-- ❌ 環境変数の管理
-- ❌ セキュリティ対策
+### ステップ6-1: デプロイ準備 ✅ **完了**（45分）
+- ✅ 本番環境用の設定
+- ✅ 環境変数の管理
+- ✅ セキュリティ対策
+- ✅ デプロイ手順書の作成
 
 **学習内容**
 - 本番環境と開発環境の違い
@@ -519,18 +521,50 @@ setAiLoading(false); // AI分析完了後に表示
 - セキュリティヘッダー
 - SQLインジェクション対策
 
-### ステップ6-2: デプロイ実施 ❌ **未実装**（45分）
-- ❌ Render.com（バックエンド）へのデプロイ
-- ❌ Vercel（フロントエンド）へのデプロイ
-- ❌ PostgreSQLの本番環境設定
-- ❌ 動作確認とトラブルシューティング
+**作成したドキュメント**
+- DEPLOYMENT_GUIDE.md（22.86 KB、全13章）
+- PHASE6-1_SUMMARY.md（16.09 KB、全8章）
+
+**作成した設定ファイル**
+- フロントエンド: mood-tracker-app.env.example、vercel.json
+- バックエンド: database.config.ts、cors.config.ts、security.config.ts、index.production.ts、mood-tracker-api.env.example
+- データベース: migration.sql
+
+**完了日**: 2025年11月27日
+
+### ステップ6-2: デプロイ実施 ✅ **完了**（45分）
+- ✅ Supabase（データベース）のセットアップ
+- ✅ Render.com（バックエンド）へのデプロイ
+- ✅ Vercel（フロントエンド）へのデプロイ
+- ✅ 動作確認とトラブルシューティング
+- ✅ ユーザー登録機能の実装と修正
+- ✅ データベース接続の修正（Connection Pooler使用）
+- ✅ advice_historyテーブルの作成
 
 **学習内容**
 - 無償ホスティングサービスの活用
-- ドメイン設定
 - データベースマイグレーション
-- ログの確認
-- パフォーマンスモニタリング
+- ログの確認とデバッグ
+- TypeScript設定の調整
+- bcryptjsへの切り替え（ネイティブモジュール問題の解決）
+- DATABASE_URL環境変数の設定
+- Connection Poolerの活用
+- テーブル作成とマイグレーション
+
+**本番環境URL**
+- フロントエンド: Vercel
+- バックエンド: Render.com
+- データベース: Supabase
+
+**トラブルシューティング実績**
+- TypeScriptビルドエラーの解決（strict mode調整）
+- bcrypt → bcryptjs への切り替え
+- DATABASE_URL環境変数の設定
+- Connection Pooler設定
+- CORS設定の更新
+- advice_historyテーブルの追加作成
+
+**完了日**: 2025年11月28日
 
 ---
 
@@ -566,12 +600,12 @@ setAiLoading(false); // AI分析完了後に表示
 - ✅ **Phase 2 完了**（4/4ステップ） - 2025年11月7日～13日
 - ✅ **Phase 3 完了**（5/5ステップ） - 2025年11月13日～14日、グラフ改善：11月26日
 - ✅ **Phase 4 完了**（7/7ステップ） - 2025年11月21日〜26日
-- ❌ Phase 5（0/3ステップ）
-- ❌ Phase 6（0/2ステップ）
+- ❌ **Phase 5**（0/3ステップ） ← **次はここ**
+- ✅ **Phase 6 完了**（2/2ステップ） - 2025年11月27日〜28日
 
-**現在の進捗率**: 19/24ステップ = **約79%完了**
+**現在の進捗率**: 21/24ステップ = **約88%完了**
 
-**次のマイルストーン**: Phase 5（テストとCI/CD）またはPhase 6（デプロイと最適化）
+**次のマイルストーン**: Phase 5（テストとCI/CD）
 
 ---
 
@@ -611,6 +645,11 @@ setAiLoading(false); // AI分析完了後に表示
 - AnalysisForm.tsx: 統合分析画面
 - 非同期ローディング最適化（グラフ即表示、AI分析別途実行）
 
+### ユーザー認証画面
+- Login.tsx / Login.css
+- Register.tsx
+- ログイン/新規登録の切り替え機能
+
 ---
 
 ## 習得できるスキル
@@ -646,16 +685,20 @@ setAiLoading(false); // AI分析完了後に表示
 - ✅ AI機能のフロントエンド統合
 - ✅ トークン消費の最適化
 
+### デプロイ ✅ 習得済み（基礎）
+- ✅ 無償ホスティングサービスの活用（Vercel、Render.com、Supabase）
+- ✅ 本番環境の設定
+- ✅ トラブルシューティング
+- ✅ データベースマイグレーション
+- ✅ 環境変数の管理
+- ✅ TypeScriptビルド設定
+- ✅ bcryptjsへの切り替え
+
 ### テストとCI/CD ❌ 未習得
 - ❌ ユニットテストの作成
 - ❌ E2Eテストの設計と実装
 - ❌ GitHub Actionsによる自動化
 - ❌ 継続的インテグレーション/デプロイメント
-
-### デプロイ ❌ 未習得
-- ❌ 無償ホスティングサービスの活用
-- ❌ 本番環境の設定
-- ❌ トラブルシューティング
 
 ---
 
@@ -670,6 +713,9 @@ setAiLoading(false); // AI分析完了後に表示
 - Vite: https://vitejs.dev/
 - Chart.js: https://www.chartjs.org/
 - Google Gemini API: https://ai.google.dev/
+- Vercel: https://vercel.com/docs
+- Render: https://render.com/docs
+- Supabase: https://supabase.com/docs
 
 ### その他のリソース
 - MDN Web Docs: https://developer.mozilla.org/
@@ -697,5 +743,5 @@ setAiLoading(false); // AI分析完了後に表示
 
 ---
 
-**最終更新日**: 2025年11月26日  
-**更新内容**: Phase 4完了（ステップ4-7追加）、ダッシュボードグラフ改善、統合分析画面実装、進捗率を79%に更新、総ステップ数24に変更
+**最終更新日**: 2025年11月28日  
+**更新内容**: Phase 6完了、進捗率を88%に更新、デプロイ実績を追記、次のマイルストーンをPhase 5に設定

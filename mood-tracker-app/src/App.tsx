@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import Login from './components/Login';
+import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import RecordForm from './components/RecordForm';
 import RecordList from './components/RecordList';
@@ -12,6 +13,7 @@ import { isAuthenticated } from './services/authService';
 
 function App() {
   const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const [showRegister, setShowRegister] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [recordDetailId, setRecordDetailId] = useState<number | null>(null);
 
@@ -21,6 +23,12 @@ function App() {
 
   const handleLoginSuccess = () => {
     setAuthenticated(true);
+    setShowRegister(false);
+  };
+
+  const handleRegisterSuccess = () => {
+    setAuthenticated(true);
+    setShowRegister(false);
   };
 
   const handleLogout = () => {
@@ -73,8 +81,16 @@ function App() {
         >
           {renderPage()}
         </Layout>
+      ) : showRegister ? (
+        <Register 
+          onRegisterSuccess={handleRegisterSuccess}
+          onSwitchToLogin={() => setShowRegister(false)}
+        />
       ) : (
-        <Login onLoginSuccess={handleLoginSuccess} />
+        <Login 
+          onLoginSuccess={handleLoginSuccess}
+          onSwitchToRegister={() => setShowRegister(true)}
+        />
       )}
     </div>
   );

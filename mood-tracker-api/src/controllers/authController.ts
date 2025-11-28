@@ -35,7 +35,11 @@ export async function register(req: Request, res: Response): Promise<void> {
     const password_hash = await hashPassword(password);
 
     // ユーザーを作成
-    const user = await UserModel.create({ username, email, password, password_hash });
+    const user = await UserModel.create({
+      username,
+      email,
+      password_hash
+    });
 
     // JWTトークンを生成
     const token = generateToken(user.id, user.username);
