@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/User';
-import { hashPassword, verifyPassword } from '../utils/passwordhelper';
+import { hashPassword, verifyPassword } from '../utils/passwordHelper';
 import { UserRegistration, UserLogin, JwtPayload } from '../types';
 
 /**
@@ -35,7 +35,11 @@ export async function register(req: Request, res: Response): Promise<void> {
     const password_hash = await hashPassword(password);
 
     // ユーザーを作成
-    const user = await UserModel.create({ username, email, password, password_hash });
+    const user = await UserModel.create({
+      username,
+      email,
+      password_hash
+    });
 
     // JWTトークンを生成
     const token = generateToken(user.id, user.username);

@@ -79,7 +79,7 @@ function CategoryTrendsChart({ data }: CategoryTrendsChartProps) {
   ];
 
   // データセットを作成
-  const datasets = Array.from(categoriesMap.entries()).map(([code, category], index) => {
+  const datasets = Array.from(categoriesMap.entries()).map(([, category], index) => {
     const colorIndex = index % colors.length;
     const scoresByDate = new Map(category.data.map(d => [d.date, d.score]));
     
@@ -119,7 +119,7 @@ function CategoryTrendsChart({ data }: CategoryTrendsChartProps) {
           text: '日付',
           font: {
             size: 14,
-            weight: 'bold'
+            weight: 'bold' as const
           }
         },
         grid: {
@@ -133,7 +133,7 @@ function CategoryTrendsChart({ data }: CategoryTrendsChartProps) {
           text: 'スコア',
           font: {
             size: 14,
-            weight: 'bold'
+            weight: 'bold' as const
           }
         },
         min: 0,
@@ -160,7 +160,7 @@ function CategoryTrendsChart({ data }: CategoryTrendsChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function(context: any) {
             return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}/10`;
           }
         }

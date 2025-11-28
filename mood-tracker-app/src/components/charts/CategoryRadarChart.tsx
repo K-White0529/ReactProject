@@ -85,7 +85,7 @@ function CategoryRadarChart({ data }: CategoryRadarChartProps) {
         pointLabels: {
           font: {
             size: 14,
-            weight: 'bold'
+            weight: 'bold' as const
           },
           color: '#333'
         },
@@ -103,7 +103,7 @@ function CategoryRadarChart({ data }: CategoryRadarChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function(context: any) {
             return `${context.label}: ${context.parsed.r.toFixed(1)}/10`;
           }
         }
