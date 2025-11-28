@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS weather_data (
 );
 
 -- 7. アドバイス履歴
-CREATE TABLE IF NOT EXISTS ai_advice (
+CREATE TABLE IF NOT EXISTS advice_history (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   advice_text TEXT NOT NULL,
@@ -116,9 +116,9 @@ CREATE INDEX IF NOT EXISTS idx_answers_answered_at ON analysis_answers(answered_
 CREATE INDEX IF NOT EXISTS idx_weather_user_id ON weather_data(user_id);
 CREATE INDEX IF NOT EXISTS idx_weather_recorded_at ON weather_data(recorded_at);
 
--- ai_adviceテーブル
-CREATE INDEX IF NOT EXISTS idx_advice_user_id ON ai_advice(user_id);
-CREATE INDEX IF NOT EXISTS idx_advice_created_at ON ai_advice(created_at);
+-- advice_historyテーブル
+CREATE INDEX IF NOT EXISTS idx_advice_user_id ON advice_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_advice_created_at ON advice_history(created_at);
 
 -- ============================================
 -- 初期データ投入
@@ -168,7 +168,7 @@ ON CONFLICT DO NOTHING;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Migration completed successfully';
-  RAISE NOTICE 'Tables created: users, records, analysis_categories, analysis_questions, analysis_answers, weather_data, ai_advice';
+  RAISE NOTICE 'Tables created: users, records, analysis_categories, analysis_questions, analysis_answers, weather_data, advice_history';
   RAISE NOTICE 'Indexes created successfully';
   RAISE NOTICE 'Initial data inserted';
 END $$;
