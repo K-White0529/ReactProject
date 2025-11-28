@@ -1,5 +1,5 @@
 import pool from '../config/database';
-import { User, UserRegistration } from '../types';
+import { User } from '../types';
 
 export class UserModel {
   /**
@@ -38,7 +38,11 @@ export class UserModel {
   /**
    * 新しいユーザーを作成
    */
-  static async create(userData: UserRegistration & { password_hash: string }): Promise<User> {
+  static async create(userData: {
+    username: string;
+    email: string;
+    password_hash: string;
+  }): Promise<User> {
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash)
        VALUES ($1, $2, $3)
