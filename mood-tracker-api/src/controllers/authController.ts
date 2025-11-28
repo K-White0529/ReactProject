@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/User';
-import { hashPassword, verifyPassword } from '../utils/passwordhelper';
+import { hashPassword, verifyPassword } from '../utils/passwordHelper';
 import { UserRegistration, UserLogin, JwtPayload } from '../types';
 
 /**
