@@ -22,7 +22,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+
     # E2Eテスト用にバックエンドとデータベースを起動
     services:
       postgres:
@@ -38,45 +38,45 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       # リポジトリのチェックアウト
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       # Node.js環境のセットアップ
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       # フロントエンドの依存関係インストール
       - name: Install frontend dependencies
         working-directory: mood-tracker-app
         run: npm ci
-      
+
       # ユニットテストの実行
       - name: Run unit tests
         working-directory: mood-tracker-app
         run: npm run test:unit
         env:
           CI: true
-      
+
       # バックエンドのセットアップ（E2Eテスト用）
       - name: Install backend dependencies
         working-directory: mood-tracker-api
         run: npm ci
-      
+
       - name: Setup test database
         run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d mood_tracker_test -f Deployment/migration.sql
+          PGPASSWORD=postgres psql -h localhost -U postgres -d mood_tracker_test -f Deployment/database/migration.sql
         env:
           PGPASSWORD: postgres
-      
+
       - name: Build backend
         working-directory: mood-tracker-api
         run: npm run build
-      
+
       - name: Start backend API
         working-directory: mood-tracker-api
         run: |
@@ -90,23 +90,23 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           WEATHER_API_URL: https://api.weatherapi.com/v1
-      
+
       - name: Wait for backend to be ready
         run: |
           timeout 30 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 1; done'
-      
+
       # E2Eテストの実行
       - name: Install Playwright browsers
         working-directory: mood-tracker-app
         run: npx playwright install --with-deps
-      
+
       - name: Run E2E tests
         working-directory: mood-tracker-app
         run: npm run test:e2e
         env:
           CI: true
           VITE_API_URL: http://localhost:3000
-      
+
       # テスト結果のアーティファクト保存
       - name: Upload test results
         if: always()
@@ -115,7 +115,7 @@ jobs:
           name: playwright-report
           path: mood-tracker-app/playwright-report/
           retention-days: 30
-      
+
       # スクリーンショットのアーティファクト保存
       - name: Upload screenshots
         if: failure()
@@ -130,26 +130,26 @@ jobs:
     name: Build Check
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         working-directory: mood-tracker-app
         run: npm ci
-      
+
       - name: Build application
         working-directory: mood-tracker-app
         run: npm run build
         env:
           CI: true
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
