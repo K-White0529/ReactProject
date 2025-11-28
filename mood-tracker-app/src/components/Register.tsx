@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { login } from '../services/authService';
-import type { UserLogin } from '../types';
+import { register } from '../services/authService';
+import type { UserRegistration } from '../types';
 import './Login.css';
 
-interface LoginProps {
-  onLoginSuccess: () => void;
-  onSwitchToRegister: () => void;
+interface RegisterProps {
+  onRegisterSuccess: () => void;
+  onSwitchToLogin: () => void;
 }
 
-function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
-  const [formData, setFormData] = useState<UserLogin>({
+function Register({ onRegisterSuccess, onSwitchToLogin }: RegisterProps) {
+  const [formData, setFormData] = useState<UserRegistration>({
     username: '',
+    email: '',
     password: ''
   });
   const [error, setError] = useState<string>('');
@@ -29,10 +30,10 @@ function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
     setLoading(true);
 
     try {
-      await login(formData);
-      onLoginSuccess();
+      await register(formData);
+      onRegisterSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ログインに失敗しました');
+      setError(err instanceof Error ? err.message : '登録に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">ログイン</h1>
+        <h1 className="auth-title">新規登録</h1>
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="username">ユーザー名</label>
@@ -56,6 +57,18 @@ function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
             />
           </div>
           <div className="form-group">
+            <label htmlFor="email">メールアドレス</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="email@example.com"
+              required
+            />
+          </div>
+          <div className="form-group">
             <label htmlFor="password">パスワード</label>
             <input
               type="password"
@@ -65,18 +78,19 @@ function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
               onChange={handleChange}
               placeholder="パスワードを入力"
               required
+              minLength={6}
             />
           </div>
           {error && <div className="error-message">{error}</div>}
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'ログイン中...' : 'ログイン'}
+            {loading ? '登録中...' : '登録'}
           </button>
         </form>
         <div className="auth-switch">
           <p>
-            アカウントをお持ちでない方は
-            <button type="button" onClick={onSwitchToRegister} className="link-button">
-              新規登録はこちら
+            すでにアカウントをお持ちですか？
+            <button type="button" onClick={onSwitchToLogin} className="link-button">
+              ログインはこちら
             </button>
           </p>
         </div>
@@ -85,4 +99,4 @@ function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
   );
 }
 
-export default Login;
+export default Register;
