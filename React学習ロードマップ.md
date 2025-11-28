@@ -469,7 +469,7 @@ setAiLoading(false); // AI分析完了後に表示
 
 ---
 
-## Phase 5: テストとCI/CD 🔄 **進行中**（1/3ステップ、約135分）
+## Phase 5: テストとCI/CD 🔄 **進行中**（2/3ステップ、約90分）
 
 ### ステップ5-1: ユニットテスト ✅ **完了**（45分）
 - ✅ Jest（バックエンド）とVitest（フロントエンド）の導入
@@ -497,16 +497,40 @@ setAiLoading(false); // AI分析完了後に表示
 
 **完了日**: 2025年11月28日
 
-### ステップ5-2: 統合テスト ❌ **未実装**（45分）
-- ❌ E2Eテストの概念
-- ❌ Playwrightの導入と基本
-- ❌ 主要シナリオのテスト
+### ステップ5-2: 統合テスト ✅ **完了**（45分）
+- ✅ E2Eテストの概念と設計
+- ✅ Playwrightの導入と設定
+- ✅ 主要シナリオのテスト作成
+- ✅ 7つのテストファイル、54テストケース
+- ✅ すべての実装済み機能のカバー
 
 **学習内容**
-- E2Eテストの設計
+- E2Eテストの設計原則
+- Playwrightの基本操作
 - テストシナリオの作成
-- 自動スクリーンショット
-- CI環境での実行
+- 待機戦略とエラーハンドリング
+- セレクタの信頼性向上
+- 複数の状態を考慮したテスト
+
+**実装した内容**
+- playwright.config.ts: Playwright設定
+- テストファイル（tests/）:
+  - auth.spec.ts: 認証機能（6テスト）
+  - dashboard.spec.ts: ダッシュボード（10テスト）
+  - record-form.spec.ts: 記録作成（10テスト）
+  - record-list.spec.ts: 記録一覧（8テスト）
+  - record-detail.spec.ts: 記録詳細（5テスト）
+  - analysis.spec.ts: 分析画面（6テスト）
+  - advice-history.spec.ts: アドバイス履歴（9テスト）
+- TEST_COVERAGE_REPORT.md: テストカバレッジレポート
+
+**テスト対象コンポーネント**
+- Login.tsx、Register.tsx、Dashboard.tsx
+- AdviceCard.tsx、AdviceHistory.tsx
+- RecordForm.tsx、RecordList.tsx、RecordDetail.tsx
+- AnalysisForm.tsx
+
+**完了日**: 2025年11月28日
 
 ### ステップ5-3: CI/CD構築 ❌ **未実装**（45分）
 - ❌ GitHub Actionsの基礎
