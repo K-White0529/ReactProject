@@ -71,11 +71,11 @@ export async function safeClick(page: Page, selector: string) {
  * ボタンが有効になるまで待ってからクリック（submitボタン用）
  */
 export async function clickSubmitButton(page: Page, buttonText: string) {
-    // 複数のセレクターパターンを試行
+    // 複数のセレクターパターンを試行（type属性に依存しない順序）
     const selectors = [
-        `button[type="submit"]:has-text("${buttonText}")`,
         `button:has-text("${buttonText}")`,
-        `button:text("${buttonText}")`
+        `button:text("${buttonText}")`,
+        `button[type="submit"]:has-text("${buttonText}")`
     ];
     
     let selector: string | null = null;

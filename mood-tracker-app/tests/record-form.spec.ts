@@ -6,6 +6,7 @@ import {
     expectPageTitle,
     safeFill,
     clickSubmitButton,
+    safeClick,
 } from "./helpers/test-helpers";
 
 test.describe("記録作成画面（RecordForm）", () => {
@@ -17,11 +18,11 @@ test.describe("記録作成画面（RecordForm）", () => {
         await clickAndWait(page, 'button:has-text("データを登録")');
         await expectPageTitle(page, "データ登録", TIMEOUTS.NAVIGATION);
         
-        // フォームが完全に読み込まれるまで待機
+        // Step 1のフォームが完全に読み込まれるまで待機
         await expect(page.locator('h2:has-text("睡眠")')).toBeVisible({ 
             timeout: TIMEOUTS.ELEMENT_VISIBLE 
         });
-        await expect(page.locator('button[type="submit"]')).toBeVisible({ 
+        await expect(page.locator('button:has-text("調子分析入力に進む")')).toBeVisible({ 
             timeout: TIMEOUTS.ELEMENT_VISIBLE 
         });
     });
@@ -100,8 +101,8 @@ test.describe("記録作成画面（RecordForm）", () => {
         ).toHaveValue("朝ジョギングをしました");
     });
 
-    test("Step5: フォームを送信して記録を作成できる", async ({ page }) => {
-        // フォームに入力
+    test("Step5: Step1を入力してStep2に進める", async ({ page }) => {
+        // Step 1のフォームに入力
         await safeFill(page, 'input[id="sleep_hours"]', "7");
         await safeFill(page, 'input[id="sleep_quality"]', "8");
         await safeFill(page, 'input[id="meal_regularity"]', "7");
@@ -113,39 +114,57 @@ test.describe("記録作成画面（RecordForm）", () => {
         await safeFill(page, 'input[id="motivation_score"]', "7");
         await safeFill(page, 'textarea[id="activities_done"]', "ジョギングと読書");
 
-        // 送信ボタンをクリック
-        await clickSubmitButton(page, "記録を保存");
+        // Step 2に進むボタンをクリック
+        await safeClick(page, 'button:has-text("調子分析入力に進む")');
 
-        // 成功メッセージまたはダッシュボードへの遷移を確認
-        const successMessage = page.locator("text=記録を保存しました");
-        const hasSuccess = await successMessage
-            .isVisible({ timeout: TIMEOUTS.API_CALL })
-            .catch(() => false);
+        // Step 2が表示されることを確認（質問が表示される）
+        await expect(page.locator("text=以下の質問に回答してください")).toBeVisible({
+            timeout: TIMEOUTS.NAVIGATION,
+        });
 
-        // どちらかが表示されていることを確認
-        expect(hasSuccess).toBe(true);
+        // 「記録を保存」ボタンが表示されることを確認
+        await expect(page.locator('button:has-text("記録を保存")')).toBeVisible({
+            timeout: TIMEOUTS.ELEMENT_VISIBLE,
+        });
     });
 
-    test("Step6: 記録作成後にフォームがリセットされる", async ({ page }) => {
-        // フォームに入力
+    test("Step6: フォームを送信して記録を作成できる", async ({ page }) => {
+        // Step 1のフォームに入力
+        await safeFill(page, 'input[id="sleep_hours"]', "7");
+        await safeFill(page, 'input[id="sleep_quality"]', "8");
+        await safeFill(page, 'input[id="meal_regularity"]', "7");
+        await safeFill(page, 'input[id="meal_quality"]', "8");
+        await safeFill(page, 'input[id="exercise_minutes"]', "30");
+        await safeFill(page, 'input[id="exercise_intensity"]', "6");
         await safeFill(page, 'input[id="emotion_score"]', "8");
-        await safeFill(page, 'textarea[id="emotion_note"]', "テストメモ");
+        await safeFill(page, 'textarea[id="emotion_note"]', "良い一日でした");
+        await safeFill(page, 'input[id="motivation_score"]', "7");
+        await safeFill(page, 'textarea[id="activities_done"]', "ジョギングと読書");
+
+        // Step 2に進む
+        await safeClick(page, 'button:has-text("調子分析入力に進む")');
+        await expect(page.locator("text=以下の質問に回答してください")).toBeVisible({
+            timeout: TIMEOUTS.NAVIGATION,
+        });
+
+        // 質問に回答（最初の質問のみ）
+        const firstQuestionSlider = page.locator('input[type="range"]').first();
+        await firstQuestionSlider.fill("7");
+
+        // すべての質問に回答
+        const allSliders = await page.locator('input[type="range"]').all();
+        for (const slider of allSliders) {
+            await slider.fill("7");
+        }
 
         // 送信ボタンをクリック
         await clickSubmitButton(page, "記録を保存");
 
-        // 成功メッセージを待つ
-        await page.waitForTimeout(2000);
-
-        // フォームがリセットされていることを確認（新しい入力が可能）
-        const emotionNote = page.locator('textarea[id="emotion_note"]');
-        const noteValue = await emotionNote.inputValue();
-
-        // 空またはリセットされていることを確認
-        expect(noteValue).toBe("");
+        // ダッシュボードに遷移することを確認
+        await expectPageTitle(page, "ダッシュボード", TIMEOUTS.NAVIGATION);
     });
 
-    test("すべてのスライダーが正しく表示され、操作できる", async ({ page }) => {
+    test("Step7: すべてのスライダーが正しく表示され、操作できる", async ({ page }) => {
         // すべてのスライダーをテスト
         const sliders = [
             { id: "sleep_quality", value: "8" },
