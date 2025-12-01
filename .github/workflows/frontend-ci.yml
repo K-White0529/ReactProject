@@ -80,8 +80,9 @@ jobs:
       - name: Start backend API
         working-directory: mood-tracker-api
         run: |
-          npm start &
+          npm start > backend.log 2>&1 &
           echo $! > backend.pid
+          echo "Backend PID: $(cat backend.pid)"
         env:
           NODE_ENV: test
           PORT: 3000
@@ -93,7 +94,18 @@ jobs:
 
       - name: Wait for backend to be ready
         run: |
-          timeout 30 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 1; done'
+          echo "Waiting for backend API..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "Backend API is ready!"
+              curl http://localhost:3000
+              exit 0
+            fi
+            echo "Attempt $i: Backend not ready yet, waiting..."
+            sleep 2
+          done
+          echo "Backend API failed to start"
+          exit 1
 
       # E2Eテストの実行
       - name: Install Playwright browsers
@@ -124,6 +136,15 @@ jobs:
           name: playwright-screenshots
           path: mood-tracker-app/test-results/
           retention-days: 30
+      
+      # バックエンドログのアーティファクト保存
+      - name: Upload backend logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-logs
+          path: mood-tracker-api/backend.log
+          retention-days: 7
 
   # ビルドの確認
   build:
