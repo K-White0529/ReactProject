@@ -80,7 +80,7 @@ test.describe("記録作成画面（RecordForm）", () => {
         await expect(sleepQualitySlider).toHaveValue("8");
 
         // スライダーの値が表示されることを確認
-        await expect(page.locator('text=8')).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
+        await expect(page.locator('.slider-value:has-text("8")')).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
     });
 
     test("Step4: テキストエリアに入力できる", async ({ page }) => {
