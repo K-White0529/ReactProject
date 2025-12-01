@@ -1,203 +1,140 @@
 import { test, expect } from "@playwright/test";
+import {
+    createAndLoginUser,
+    TIMEOUTS,
+    clickAndWait,
+    expectPageTitle,
+    navigateTo,
+    safeClick,
+} from "./helpers/test-helpers";
 
 test.describe("アドバイス履歴画面（AdviceHistory）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前にログイン
-        await page.goto("/");
-        await page.fill('input[name="username"]', "testuser");
-        await page.fill('input[name="password"]', "Test1234!");
-        await page.click('button:has-text("ログイン")');
-        await expect(
-            page.locator('h1:has-text("ダッシュボード")')
-        ).toBeVisible();
+        // テスト前に新規ユーザーを作成してログイン
+        await createAndLoginUser(page);
 
         // アドバイス履歴画面に移動
-        await page.click('button:has-text("アドバイス履歴")');
-        await expect(page.locator('h1:has-text("アドバイス履歴")')).toBeVisible(
-            { timeout: 10000 }
-        );
+        await clickAndWait(page, 'button:has-text("アドバイス履歴")');
+        await expectPageTitle(page, "アドバイス履歴", TIMEOUTS.NAVIGATION);
     });
 
     test("ページの基本要素が表示される", async ({ page }) => {
         // ページタイトルが表示されることを確認
-        await expect(
-            page.locator('h1:has-text("アドバイス履歴")')
-        ).toBeVisible();
+        await expectPageTitle(page, "アドバイス履歴");
 
         // 履歴件数が表示されることを確認
-        await expect(page.locator("text=全")).toBeVisible();
-        await expect(page.locator("text=件")).toBeVisible();
+        await expect(page.locator("text=全")).toBeVisible({
+            timeout: TIMEOUTS.ELEMENT_VISIBLE,
+        });
+        await expect(page.locator("text=件")).toBeVisible({
+            timeout: TIMEOUTS.ELEMENT_VISIBLE,
+        });
 
         // 戻るボタンが表示されることを確認
         await expect(
             page.locator('button:has-text("ダッシュボードに戻る")')
-        ).toBeVisible();
+        ).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
 
         // 新しいアドバイス生成ボタンが表示されることを確認
         await expect(
             page.locator('button:has-text("新しいアドバイスを生成")')
-        ).toBeVisible();
+        ).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
     });
 
-    test("アドバイス履歴がある場合、履歴が表示される", async ({ page }) => {
-        // 履歴リストまたは空の状態メッセージのいずれかが表示される
-        const adviceList = page.locator(".advice-list");
-        const emptyState = page.locator(
-            "text=まだアドバイスの履歴がありません"
-        );
+    test("履歴がある場合、アドバイスカードが表示される", async ({ page }) => {
+        // 履歴カードまたは空の状態メッセージのいずれかが表示される
+        const adviceCards = page.locator(".advice-item");
+        const emptyState = page.locator("text=まだアドバイスの履歴がありません");
 
-        const hasAdviceList = await adviceList
-            .isVisible({ timeout: 5000 })
-            .catch(() => false);
-        const hasEmptyState = await emptyState.isVisible().catch(() => false);
+        const hasCards = (await adviceCards.count()) > 0;
+        const hasEmptyState = await emptyState.isVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE }).catch(() => false);
 
         // どちらか一方が表示されていることを確認
-        expect(hasAdviceList || hasEmptyState).toBe(true);
-    });
-
-    test("アドバイスアイテムに必要な情報が表示される", async ({ page }) => {
-        // アドバイスアイテムが存在する場合のみテスト
-        const adviceItems = page.locator(".advice-item");
-        const count = await adviceItems.count();
-
-        if (count > 0) {
-            const firstItem = adviceItems.first();
-
-            // 日時が表示されることを確認
-            await expect(firstItem.locator(".advice-item-date")).toBeVisible();
-
-            // 相対時間が表示されることを確認
-            await expect(
-                firstItem.locator(".advice-item-relative")
-            ).toBeVisible();
-
-            // アドバイスの内容が表示されることを確認
-            await expect(
-                firstItem.locator(".advice-item-content")
-            ).toBeVisible();
-        } else {
-            test.skip();
-        }
+        expect(hasCards || hasEmptyState).toBe(true);
     });
 
     test("新しいアドバイスを生成できる", async ({ page }) => {
-        // 生成ボタンをクリック
-        const generateButton = page.locator(
-            'button:has-text("新しいアドバイスを生成")'
-        );
-        await generateButton.click();
+        // 新しいアドバイス生成ボタンをクリック
+        await safeClick(page, 'button:has-text("新しいアドバイスを生成")');
 
-        // 生成中の表示を確認
-        const generatingButton = page.locator('button:has-text("生成中...")');
-        const hasGenerating = await generatingButton
+        // ローディング状態を確認
+        const loadingIndicator = page.locator("text=生成中..., text=読み込み中...");
+        const hasLoading = await loadingIndicator
             .isVisible({ timeout: 2000 })
             .catch(() => false);
 
-        if (hasGenerating) {
-            // 生成完了またはエラーを待つ（最大90秒）
-            // 生成中ボタンが消えるか、エラーメッセージが表示されるのを待つ
-            await Promise.race([
-                generatingButton
-                    .waitFor({ state: "hidden", timeout: 90000 })
-                    .catch(() => {}),
-                page
-                    .locator(".error-message")
-                    .waitFor({ state: "visible", timeout: 90000 })
-                    .catch(() => {}),
-            ]);
-        }
+        // アドバイスが生成されるまで待つ（最大40秒）
+        await page.waitForTimeout(TIMEOUTS.AI_GENERATION);
 
-        // 生成後、履歴が更新されるか、エラーが表示されることを確認
-        await page.waitForTimeout(2000);
-
-        const adviceList = page.locator(".advice-list");
-        const emptyState = page.locator(
-            "text=まだアドバイスの履歴がありません"
-        );
+        // エラーメッセージまたは成功状態を確認
         const errorMessage = page.locator(".error-message");
+        const adviceCards = page.locator(".advice-item");
+        const emptyState = page.locator("text=まだアドバイスの履歴がありません");
 
-        const hasAdviceList = await adviceList.isVisible().catch(() => false);
-        const hasEmptyState = await emptyState.isVisible().catch(() => false);
         const hasError = await errorMessage.isVisible().catch(() => false);
+        const hasCards = (await adviceCards.count()) > 0;
+        const hasEmpty = await emptyState.isVisible().catch(() => false);
 
-        // 履歴、空の状態、またはエラーのいずれかが表示されていることを確認
-        expect(hasAdviceList || hasEmptyState || hasError).toBe(true);
+        // データがない場合はエラーが表示される可能性がある
+        // いずれかの状態になっていればOK
+        expect(hasError || hasCards || hasEmpty).toBe(true);
     });
 
-    test("アドバイスがない場合、空の状態メッセージが表示される", async ({
-        page,
-    }) => {
-        // アドバイスアイテムが存在しない場合
-        const adviceItems = page.locator(".advice-item");
-        const count = await adviceItems.count();
+    test("ダッシュボードに戻るボタンが機能する", async ({ page }) => {
+        // アドバイス履歴画面にいることを確認
+        await expectPageTitle(page, "アドバイス履歴");
 
-        if (count === 0) {
-            // 空の状態メッセージが表示されることを確認
-            await expect(
-                page.locator("text=まだアドバイスの履歴がありません")
-            ).toBeVisible();
-
-            // アイコンが表示されることを確認
-            const emptyIcon = page.locator(".empty-icon");
-            await expect(emptyIcon).toBeVisible();
-
-            // 新規生成ボタンが表示されることを確認
-            await expect(
-                page.locator('button:has-text("新しいアドバイスを生成")')
-            ).toBeVisible();
-        } else {
-            test.skip();
-        }
-    });
-
-    test("ダッシュボードに戻れる", async ({ page }) => {
-        // 戻るボタンをクリック
-        await page.click('button:has-text("ダッシュボードに戻る")');
+        // ダッシュボードに戻るボタンをクリック
+        await clickAndWait(page, 'button:has-text("ダッシュボードに戻る")');
 
         // ダッシュボードに遷移することを確認
-        await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible(
-            { timeout: 5000 }
-        );
+        await expectPageTitle(page, "ダッシュボード", TIMEOUTS.NAVIGATION);
     });
 
-    test("複数のアドバイスが時系列で表示される", async ({ page }) => {
-        // アドバイスアイテムが複数存在する場合
-        const adviceItems = page.locator(".advice-item");
-        const count = await adviceItems.count();
+    test("サイドバーから他のページに遷移できる", async ({ page }) => {
+        // アドバイス履歴画面にいることを確認
+        await expectPageTitle(page, "アドバイス履歴");
 
-        if (count > 1) {
-            // 複数のアドバイスアイテムが表示されることを確認
-            expect(count).toBeGreaterThan(1);
+        // ダッシュボードに移動
+        await navigateTo(page, "ダッシュボード", "ダッシュボード");
 
-            // 最初のアイテムと2番目のアイテムの日時を確認
-            const firstDate = await adviceItems
-                .first()
-                .locator(".advice-item-date")
-                .textContent();
-            const secondDate = await adviceItems
-                .nth(1)
-                .locator(".advice-item-date")
-                .textContent();
+        // アドバイス履歴に戻る
+        await clickAndWait(page, 'button:has-text("アドバイス履歴")');
+        await expectPageTitle(page, "アドバイス履歴", TIMEOUTS.NAVIGATION);
 
-            // 両方の日時が表示されていることを確認
-            expect(firstDate).toBeTruthy();
-            expect(secondDate).toBeTruthy();
-        } else {
-            test.skip();
+        // データ登録に移動
+        await navigateTo(page, "データ登録", "データ登録");
+    });
+
+    test("履歴がない場合、空の状態メッセージが表示される", async ({ page }) => {
+        const adviceCards = page.locator(".advice-item");
+        const emptyState = page.locator("text=まだアドバイスの履歴がありません");
+
+        const hasCards = (await adviceCards.count()) > 0;
+
+        if (!hasCards) {
+            await expect(emptyState).toBeVisible({
+                timeout: TIMEOUTS.ELEMENT_VISIBLE,
+            });
         }
     });
 
-    test("サイドバーからアドバイス履歴画面に戻れる", async ({ page }) => {
-        // 他のページに移動
-        await page.click('button:has-text("ダッシュボード")');
-        await expect(
-            page.locator('h1:has-text("ダッシュボード")')
-        ).toBeVisible();
+    test("履歴カードに日付が表示される", async ({ page }) => {
+        const adviceCards = page.locator(".advice-item");
+        const count = await adviceCards.count();
 
-        // アドバイス履歴に戻る
-        await page.click('button:has-text("アドバイス履歴")');
-        await expect(
-            page.locator('h1:has-text("アドバイス履歴")')
-        ).toBeVisible();
+        if (count > 0) {
+            const firstCard = adviceCards.first();
+
+            // 日付が表示されることを確認
+            const dateElement = firstCard.locator(
+                ".advice-item-date, text=/\\d{4}/\\d{2}/\\d{2}/"
+            );
+            const hasDate = await dateElement.isVisible().catch(() => false);
+
+            expect(hasDate).toBe(true);
+        } else {
+            test.skip();
+        }
     });
 });

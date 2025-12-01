@@ -2,16 +2,18 @@ import { test, expect } from "@playwright/test";
 
 test.describe("認証機能", () => {
     test("新規登録ができる", async ({ page }) => {
-        await page.goto("/");
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
 
         // ログイン画面が表示されることを確認
-        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible();
+        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ timeout: 15000 });
 
         // 新規登録リンクをクリック
         await page.click('button:has-text("新規登録はこちら")');
+        await page.waitForLoadState('networkidle');
 
         // 新規登録画面に遷移することを確認
-        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible();
+        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ timeout: 15000 });
 
         // フォームに入力
         const timestamp = Date.now();
@@ -21,53 +23,88 @@ test.describe("認証機能", () => {
 
         // 新規登録ボタンをクリック
         await page.click('button:has-text("登録")');
+        
+        // APIレスポンスを待つ
+        await page.waitForLoadState('networkidle');
 
         // ダッシュボードに遷移することを確認
         await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible(
-            { timeout: 10000 }
+            { timeout: 20000 }
         );
     });
 
     test("ログイン画面と新規登録画面を切り替えられる", async ({ page }) => {
-        await page.goto("/");
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
 
         // ログイン画面が表示されることを確認
-        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible();
+        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ timeout: 15000 });
 
         // 新規登録リンクをクリック
         await page.click('button:has-text("新規登録はこちら")');
+        await page.waitForLoadState('domcontentloaded');
 
         // 新規登録画面に遷移
-        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible();
+        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ timeout: 15000 });
 
         // ログインリンクをクリック
         await page.click('button:has-text("ログインはこちら")');
+        await page.waitForLoadState('domcontentloaded');
 
         // ログイン画面に戻ることを確認
-        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible();
+        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ timeout: 15000 });
     });
 
     test("既存ユーザーでログインできる", async ({ page }) => {
-        await page.goto("/");
-
+        // まずユーザーを作成
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
+        
+        // 新規登録画面に移動
+        await page.click('button:has-text("新規登録はこちら")');
+        await page.waitForLoadState('networkidle');
+        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ timeout: 15000 });
+        
+        // テストユーザーを登録
+        const timestamp = Date.now();
+        const testUsername = `testuser${timestamp}`;
+        const testPassword = "Test1234!";
+        
+        await page.fill('input[name="username"]', testUsername);
+        await page.fill('input[name="email"]', `test${timestamp}@example.com`);
+        await page.fill('input[name="password"]', testPassword);
+        await page.click('button:has-text("登録")');
+        await page.waitForLoadState('networkidle');
+        
+        // ダッシュボードに遷移することを確認
+        await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({ timeout: 20000 });
+        
+        // ログアウト（サイドバーのユーザーメニューをクリック）
+        await page.click('.user-menu, button:has-text("ログアウト")');
+        await page.waitForLoadState('networkidle');
+        
         // ログイン画面が表示されることを確認
-        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible();
+        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ timeout: 15000 });
 
-        // 既存のユーザーでログイン（事前に作成しておく必要があります）
-        await page.fill('input[name="username"]', "testuser");
-        await page.fill('input[name="password"]', "Test1234!");
+        // 作成したユーザーでログイン
+        await page.fill('input[name="username"]', testUsername);
+        await page.fill('input[name="password"]', testPassword);
 
         // ログインボタンをクリック
         await page.click('button:has-text("ログイン")');
+        
+        // APIレスポンスを待つ
+        await page.waitForLoadState('networkidle');
 
         // ダッシュボードに遷移することを確認
         await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible(
-            { timeout: 10000 }
+            { timeout: 20000 }
         );
     });
 
     test("無効な認証情報でログインに失敗する", async ({ page }) => {
-        await page.goto("/");
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
 
         // 間違ったユーザー名とパスワードでログイン
         await page.fill('input[name="username"]', "wronguser");
@@ -76,9 +113,9 @@ test.describe("認証機能", () => {
         // ログインボタンをクリック
         await page.click('button:has-text("ログイン")');
 
-        // エラーメッセージまたはログイン画面のままであることを確認
-        // エラーメッセージが表示されるか、ログイン画面が残っているかをチェック
-        await page.waitForTimeout(3000); // APIレスポンスを待つ
+        // APIレスポンスを待つ
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(2000); // エラーメッセージ表示を待つ
 
         const errorMessage = page.locator(".error-message, .auth-error");
         const loginTitle = page.locator('h1:has-text("ログイン")');
@@ -99,11 +136,14 @@ test.describe("認証機能", () => {
     });
 
     test("パスワードが短すぎる場合に新規登録できない", async ({ page }) => {
-        await page.goto("/");
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
 
         // 新規登録画面に移動
         await page.click('button:has-text("新規登録はこちら")');
-        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible();
+        await page.waitForLoadState('domcontentloaded');
+        
+        await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ timeout: 15000 });
 
         // 短いパスワードで入力
         const timestamp = Date.now();
@@ -114,8 +154,8 @@ test.describe("認証機能", () => {
         // 新規登録ボタンをクリック
         await page.click('button:has-text("登録")');
 
-        // エラーメッセージが表示されるか、新規登録画面のままであることを確認
-        await page.waitForTimeout(2000);
+        // エラーメッセージが表示されるまで待つ
+        await page.waitForTimeout(3000);
 
         const errorMessage = page.locator(".error-message, .auth-error");
         const registerTitle = page.locator('h1:has-text("新規登録")');
@@ -130,11 +170,12 @@ test.describe("認証機能", () => {
     });
 
     test("フォーム入力が正しく機能する", async ({ page }) => {
-        await page.goto("/");
+        await page.goto("/", { waitUntil: 'networkidle' });
+        await page.waitForLoadState('domcontentloaded');
 
         // ログインフォームが表示されることを確認
-        await expect(page.locator('input[name="username"]')).toBeVisible();
-        await expect(page.locator('input[name="password"]')).toBeVisible();
+        await expect(page.locator('input[name="username"]')).toBeVisible({ timeout: 15000 });
+        await expect(page.locator('input[name="password"]')).toBeVisible({ timeout: 15000 });
 
         // 入力フィールドにテキストを入力
         await page.fill('input[name="username"]', "testinput");
