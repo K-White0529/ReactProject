@@ -8,6 +8,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   
+  // グローバルセットアップ（全テスト実行前に1回だけ実行）
+  globalSetup: './tests/setup/global-setup.ts',
+  
   // CI環境用のタイムアウト設定（コード分割対応で延長）
   timeout: 60000, // テスト全体: 60秒（コード分割対応）
   

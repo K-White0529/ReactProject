@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -10,8 +10,8 @@ import {
 
 test.describe("アドバイス履歴画面（AdviceHistory）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
 
         // アドバイス履歴画面に移動
         await clickAndWait(page, 'button:has-text("アドバイス履歴")');
@@ -136,11 +136,10 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
         if (count > 0) {
             const firstCard = adviceCards.first();
 
-            // 日付が表示されることを確認
-            const dateElement = firstCard.locator(
-                ".advice-item-date, text=/\\d{4}/\\d{2}/\\d{2}/"
-            );
-            const hasDate = await dateElement.isVisible().catch(() => false);
+            // 日付パターン（YYYY/MM/DD）が表示されることを確認
+            const datePattern = /\d{4}\/\d{2}\/\d{2}/;
+            const cardText = await firstCard.textContent();
+            const hasDate = cardText ? datePattern.test(cardText) : false;
 
             expect(hasDate).toBe(true);
         } else {
