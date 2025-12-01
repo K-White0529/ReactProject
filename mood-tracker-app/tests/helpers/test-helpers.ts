@@ -68,6 +68,65 @@ export async function safeClick(page: Page, selector: string) {
 }
 
 /**
+ * ボタンが有効になるまで待ってからクリック（submitボタン用）
+ */
+export async function clickSubmitButton(page: Page, buttonText: string) {
+    // 複数のセレクターパターンを試行
+    const selectors = [
+        `button[type="submit"]:has-text("${buttonText}")`,
+        `button:has-text("${buttonText}")`,
+        `button:text("${buttonText}")`
+    ];
+    
+    let selector: string | null = null;
+    let lastError: Error | null = null;
+    
+    // どのセレクターが機能するか試す
+    for (const testSelector of selectors) {
+        try {
+            await page.waitForSelector(testSelector, { 
+                state: 'visible',
+                timeout: 5000 // 各パターンて5秒
+            });
+            selector = testSelector;
+            break;
+        } catch (error) {
+            lastError = error as Error;
+            continue;
+        }
+    }
+    
+    // どのセレクターも機能しなかった場合
+    if (!selector) {
+        console.error(`Button not found with text: "${buttonText}"`);
+        const allButtons = await page.locator('button').allTextContents();
+        console.error('Available buttons:', allButtons);
+        throw lastError;
+    }
+    
+    console.log(`Using selector: ${selector}`);
+    
+    // ボタンが有効になるまで待機（最大5秒）
+    let attempts = 0;
+    const maxAttempts = 10;
+    while (attempts < maxAttempts) {
+        const isDisabled = await page.locator(selector).isDisabled();
+        if (!isDisabled) {
+            break;
+        }
+        console.log(`Button is disabled, waiting... (attempt ${attempts + 1}/${maxAttempts})`);
+        await page.waitForTimeout(500);
+        attempts++;
+    }
+    
+    // クリック
+    await page.click(selector, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
+    
+    // API呼び出しの完了を待機
+    await page.waitForLoadState('networkidle');
+}
+
+/**
  * テストユーザーを作成してログインする
  * @returns 作成したユーザーの情報
  */

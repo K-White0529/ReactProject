@@ -4,6 +4,8 @@ import {
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
+    safeFill,
+    clickSubmitButton,
 } from "./helpers/test-helpers";
 
 test.describe("記録作成画面（RecordForm）", () => {
@@ -14,6 +16,14 @@ test.describe("記録作成画面（RecordForm）", () => {
         // 記録作成画面に移動
         await clickAndWait(page, 'button:has-text("データを登録")');
         await expectPageTitle(page, "データ登録", TIMEOUTS.NAVIGATION);
+        
+        // フォームが完全に読み込まれるまで待機
+        await expect(page.locator('h2:has-text("睡眠")')).toBeVisible({ 
+            timeout: TIMEOUTS.ELEMENT_VISIBLE 
+        });
+        await expect(page.locator('button[type="submit"]')).toBeVisible({ 
+            timeout: TIMEOUTS.ELEMENT_VISIBLE 
+        });
     });
 
     test("気象情報カードが表示される", async ({ page }) => {
@@ -50,13 +60,13 @@ test.describe("記録作成画面（RecordForm）", () => {
 
     test("Step2: 数値入力フィールドに値を入力できる", async ({ page }) => {
         // 睡眠時間を入力
-        await page.fill('input[id="sleep_hours"]', "7.5");
+        await safeFill(page, 'input[id="sleep_hours"]', "7.5");
         await expect(page.locator('input[id="sleep_hours"]')).toHaveValue(
             "7.5"
         );
 
         // 運動時間を入力
-        await page.fill('input[id="exercise_minutes"]', "30");
+        await safeFill(page, 'input[id="exercise_minutes"]', "30");
         await expect(page.locator('input[id="exercise_minutes"]')).toHaveValue(
             "30"
         );
@@ -74,13 +84,14 @@ test.describe("記録作成画面（RecordForm）", () => {
 
     test("Step4: テキストエリアに入力できる", async ({ page }) => {
         // 感情のメモを入力
-        await page.fill('textarea[id="emotion_note"]', "今日はとても良い気分です");
+        await safeFill(page, 'textarea[id="emotion_note"]', "今日はとても良い気分です");
         await expect(page.locator('textarea[id="emotion_note"]')).toHaveValue(
             "今日はとても良い気分です"
         );
 
         // やったことを入力
-        await page.fill(
+        await safeFill(
+            page,
             'textarea[id="activities_done"]',
             "朝ジョギングをしました"
         );
@@ -91,19 +102,19 @@ test.describe("記録作成画面（RecordForm）", () => {
 
     test("Step5: フォームを送信して記録を作成できる", async ({ page }) => {
         // フォームに入力
-        await page.fill('input[id="sleep_hours"]', "7");
-        await page.fill('input[id="sleep_quality"]', "8");
-        await page.fill('input[id="meal_regularity"]', "7");
-        await page.fill('input[id="meal_quality"]', "8");
-        await page.fill('input[id="exercise_minutes"]', "30");
-        await page.fill('input[id="exercise_intensity"]', "6");
-        await page.fill('input[id="emotion_score"]', "8");
-        await page.fill('textarea[id="emotion_note"]', "良い一日でした");
-        await page.fill('input[id="motivation_score"]', "7");
-        await page.fill('textarea[id="activities_done"]', "ジョギングと読書");
+        await safeFill(page, 'input[id="sleep_hours"]', "7");
+        await safeFill(page, 'input[id="sleep_quality"]', "8");
+        await safeFill(page, 'input[id="meal_regularity"]', "7");
+        await safeFill(page, 'input[id="meal_quality"]', "8");
+        await safeFill(page, 'input[id="exercise_minutes"]', "30");
+        await safeFill(page, 'input[id="exercise_intensity"]', "6");
+        await safeFill(page, 'input[id="emotion_score"]', "8");
+        await safeFill(page, 'textarea[id="emotion_note"]', "良い一日でした");
+        await safeFill(page, 'input[id="motivation_score"]', "7");
+        await safeFill(page, 'textarea[id="activities_done"]', "ジョギングと読書");
 
         // 送信ボタンをクリック
-        await clickAndWait(page, 'button:has-text("記録を保存")');
+        await clickSubmitButton(page, "記録を保存");
 
         // 成功メッセージまたはダッシュボードへの遷移を確認
         const successMessage = page.locator("text=記録を保存しました");
@@ -117,11 +128,11 @@ test.describe("記録作成画面（RecordForm）", () => {
 
     test("Step6: 記録作成後にフォームがリセットされる", async ({ page }) => {
         // フォームに入力
-        await page.fill('input[id="emotion_score"]', "8");
-        await page.fill('textarea[id="emotion_note"]', "テストメモ");
+        await safeFill(page, 'input[id="emotion_score"]', "8");
+        await safeFill(page, 'textarea[id="emotion_note"]', "テストメモ");
 
         // 送信ボタンをクリック
-        await clickAndWait(page, 'button:has-text("記録を保存")');
+        await clickSubmitButton(page, "記録を保存");
 
         // 成功メッセージを待つ
         await page.waitForTimeout(2000);
