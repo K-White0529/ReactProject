@@ -51,4 +51,52 @@ export class UserModel {
     );
     return result.rows[0];
   }
+
+  /**
+   * ユーザーを削除（テスト用）
+   * 関連データも全て削除される（CASCADE設定）
+   */
+  static async delete(userId: number): Promise<boolean> {
+    try {
+      const result = await pool.query(
+        'DELETE FROM users WHERE id = $1',
+        [userId]
+      );
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error('ユーザー削除エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ユーザー名でユーザーを削除（テスト用）
+   */
+  static async deleteByUsername(username: string): Promise<boolean> {
+    try {
+      const result = await pool.query(
+        'DELETE FROM users WHERE username = $1',
+        [username]
+      );
+      return result.rowCount ? result.rowCount > 0 : false;
+    } catch (error) {
+      console.error('ユーザー削除エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * テストユーザーを一括削除（testuserで始まるユーザーを全て削除）
+   */
+  static async deleteTestUsers(): Promise<number> {
+    try {
+      const result = await pool.query(
+        "DELETE FROM users WHERE username LIKE 'testuser%'"
+      );
+      return result.rowCount || 0;
+    } catch (error) {
+      console.error('テストユーザー一括削除エラー:', error);
+      throw error;
+    }
+  }
 }
