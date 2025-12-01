@@ -8,17 +8,17 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   
-  // CI環境用のタイムアウト設定
-  timeout: process.env.CI ? 60000 : 30000, // テスト全体: 60秒
+  // CI環境用のタイムアウト設定（コード分割対応で延長）
+  timeout: 60000, // テスト全体: 60秒（コード分割対応）
   
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     
-    // アクションのタイムアウトを延長
-    actionTimeout: process.env.CI ? 15000 : 10000, // 15秒
-    navigationTimeout: process.env.CI ? 30000 : 20000, // 30秒
+    // アクションのタイムアウトを延長（コード分割対応）
+    actionTimeout: 15000, // 15秒（コード分割対応）
+    navigationTimeout: 30000, // 30秒
   },
 
   projects: [

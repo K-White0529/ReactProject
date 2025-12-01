@@ -23,7 +23,7 @@ export async function safeGoto(page: Page, url: string) {
 }
 
 /**
- * クリック後にナビゲーション完了を待つ
+ * クリック後にナビゲーション完了を待つ（コード分割対応版）
  */
 export async function clickAndWait(page: Page, selector: string) {
     // 要素が表示されるまで待機
@@ -36,7 +36,25 @@ export async function clickAndWait(page: Page, selector: string) {
     await page.click(selector, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
     
     // ナビゲーション完了を待機
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        // タイムアウトしても続行
+    });
+    
+    // コード分割のためのローディングスピナーが消えるのを待つ
+    const loadingSpinner = page.locator('.loading-spinner');
+    const hasLoadingSpinner = await loadingSpinner.isVisible().catch(() => false);
+    
+    if (hasLoadingSpinner) {
+        await loadingSpinner.waitFor({ 
+            state: 'hidden', 
+            timeout: 5000 
+        }).catch(() => {
+            // すでに消えている場合は無視
+        });
+    }
+    
+    // コンポーネントのマウント待ち
+    await page.waitForTimeout(500);
 }
 
 /**
@@ -127,7 +145,7 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
 }
 
 /**
- * テストユーザーを作成してログインする
+ * テストユーザーを作成してログインする（コード分割対応版）
  * @returns 作成したユーザーの情報
  */
 export async function createAndLoginUser(page: Page): Promise<{
@@ -137,6 +155,10 @@ export async function createAndLoginUser(page: Page): Promise<{
 }> {
     await safeGoto(page, "/");
 
+    // ローディングスピナーが消えるまで待つ
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(500);
+
     // ログイン画面が表示されることを確認
     await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ 
         timeout: TIMEOUTS.ELEMENT_VISIBLE 
@@ -144,6 +166,10 @@ export async function createAndLoginUser(page: Page): Promise<{
 
     // 新規登録画面に移動
     await clickAndWait(page, 'button:has-text("新規登録はこちら")');
+    
+    // ローディング完了を待つ
+    await page.waitForTimeout(500);
+    
     await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ 
         timeout: TIMEOUTS.ELEMENT_VISIBLE 
     });
@@ -163,6 +189,10 @@ export async function createAndLoginUser(page: Page): Promise<{
 
     // 登録ボタンをクリック
     await clickAndWait(page, 'button:has-text("登録")');
+    
+    // ローディングスピナーが消えるのを待つ
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(1000); // コンポーネントのマウント待ち
 
     // ダッシュボードに遷移することを確認
     await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
@@ -213,11 +243,30 @@ export async function logout(page: Page) {
 }
 
 /**
- * 指定したページに移動することを確認
+ * 指定したページに移動することを確認（コード分割対応版）
  */
 export async function expectPageTitle(page: Page, title: string, timeout?: number) {
+    const actualTimeout = timeout || TIMEOUTS.ELEMENT_VISIBLE;
+    
+    // ローディングスピナーが表示されている場合は消えるまで待つ
+    const loadingSpinner = page.locator('.loading-spinner');
+    const hasLoadingSpinner = await loadingSpinner.isVisible().catch(() => false);
+    
+    if (hasLoadingSpinner) {
+        await loadingSpinner.waitFor({ 
+            state: 'hidden', 
+            timeout: 5000 
+        }).catch(() => {
+            // ローディングスピナーがすでに消えている場合は無視
+        });
+    }
+    
+    // 短い待機時間を追加（コンポーネントのマウント待ち）
+    await page.waitForTimeout(500);
+    
+    // ページタイトルが表示されることを確認
     await expect(page.locator(`h1:has-text("${title}")`)).toBeVisible({
-        timeout: timeout || TIMEOUTS.ELEMENT_VISIBLE,
+        timeout: actualTimeout,
     });
 }
 

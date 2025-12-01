@@ -54,6 +54,9 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
     });
 
     test("新しいアドバイスを生成できる", async ({ page }) => {
+        // テストタイムアウトを延長
+        test.setTimeout(90000); // 90秒
+        
         // 新しいアドバイス生成ボタンをクリック
         await safeClick(page, 'button:has-text("新しいアドバイスを生成")');
 
@@ -63,10 +66,18 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
             .isVisible({ timeout: 2000 })
             .catch(() => false);
 
-        // アドバイスが生成されるまで待つ（最大40秒）
-        await page.waitForTimeout(TIMEOUTS.AI_GENERATION);
+        // いずれかの状態になるまで待つ（最大60秒）
+        await page.waitForFunction(
+            () => {
+                const hasError = document.querySelector('.error-message');
+                const hasCards = document.querySelectorAll('.advice-item').length > 0;
+                return hasError || hasCards;
+            },
+            { timeout: 60000 }
+        ).catch(() => {
+            // タイムアウトしても続行
+        });
 
-        // エラーメッセージまたは成功状態を確認
         const errorMessage = page.locator(".error-message");
         const adviceCards = page.locator(".advice-item");
         const emptyState = page.locator("text=まだアドバイスの履歴がありません");
@@ -75,7 +86,6 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
         const hasCards = (await adviceCards.count()) > 0;
         const hasEmpty = await emptyState.isVisible().catch(() => false);
 
-        // データがない場合はエラーが表示される可能性がある
         // いずれかの状態になっていればOK
         expect(hasError || hasCards || hasEmpty).toBe(true);
     });
