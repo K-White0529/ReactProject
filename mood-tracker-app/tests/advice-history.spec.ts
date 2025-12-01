@@ -5,6 +5,7 @@ import {
     clickAndWait,
     expectPageTitle,
     navigateTo,
+    safeClick,
 } from "./helpers/test-helpers";
 
 test.describe("アドバイス履歴画面（AdviceHistory）", () => {
@@ -54,7 +55,7 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
 
     test("新しいアドバイスを生成できる", async ({ page }) => {
         // 新しいアドバイス生成ボタンをクリック
-        await page.click('button:has-text("新しいアドバイスを生成")');
+        await safeClick(page, 'button:has-text("新しいアドバイスを生成")');
 
         // ローディング状態を確認
         const loadingIndicator = page.locator("text=生成中..., text=読み込み中...");

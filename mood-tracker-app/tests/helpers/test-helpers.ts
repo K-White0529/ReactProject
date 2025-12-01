@@ -26,8 +26,45 @@ export async function safeGoto(page: Page, url: string) {
  * クリック後にナビゲーション完了を待つ
  */
 export async function clickAndWait(page: Page, selector: string) {
-    await page.click(selector);
+    // 要素が表示されるまで待機
+    await page.waitForSelector(selector, { 
+        state: 'visible',
+        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    });
+    
+    // クリック
+    await page.click(selector, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
+    
+    // ナビゲーション完了を待機
     await page.waitForLoadState('networkidle');
+}
+
+/**
+ * 安全に入力フィールドに値を入力
+ */
+export async function safeFill(page: Page, selector: string, value: string) {
+    // 要素が表示されるまで待機
+    await page.waitForSelector(selector, { 
+        state: 'visible',
+        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    });
+    
+    // 入力
+    await page.fill(selector, value);
+}
+
+/**
+ * 安全にクリック（ナビゲーションを伴わない）
+ */
+export async function safeClick(page: Page, selector: string) {
+    // 要素が表示されるまで待機
+    await page.waitForSelector(selector, { 
+        state: 'visible',
+        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    });
+    
+    // クリック
+    await page.click(selector, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
 }
 
 /**
@@ -40,6 +77,11 @@ export async function createAndLoginUser(page: Page): Promise<{
     email: string;
 }> {
     await safeGoto(page, "/");
+
+    // ログイン画面が表示されることを確認
+    await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ 
+        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    });
 
     // 新規登録画面に移動
     await clickAndWait(page, 'button:has-text("新規登録はこちら")');
@@ -56,9 +98,9 @@ export async function createAndLoginUser(page: Page): Promise<{
     };
 
     // フォームに入力
-    await page.fill('input[name="username"]', userInfo.username);
-    await page.fill('input[name="email"]', userInfo.email);
-    await page.fill('input[name="password"]', userInfo.password);
+    await safeFill(page, 'input[name="username"]', userInfo.username);
+    await safeFill(page, 'input[name="email"]', userInfo.email);
+    await safeFill(page, 'input[name="password"]', userInfo.password);
 
     // 登録ボタンをクリック
     await clickAndWait(page, 'button:has-text("登録")');
@@ -87,8 +129,8 @@ export async function loginUser(
     });
 
     // 認証情報を入力
-    await page.fill('input[name="username"]', username);
-    await page.fill('input[name="password"]', password);
+    await safeFill(page, 'input[name="username"]', username);
+    await safeFill(page, 'input[name="password"]', password);
 
     // ログインボタンをクリック
     await clickAndWait(page, 'button:has-text("ログイン")');

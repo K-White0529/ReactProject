@@ -5,6 +5,7 @@ import {
     clickAndWait,
     expectPageTitle,
     navigateTo,
+    safeClick,
 } from "./helpers/test-helpers";
 
 test.describe("分析結果画面（AnalysisForm）", () => {
@@ -44,15 +45,15 @@ test.describe("分析結果画面（AnalysisForm）", () => {
 
     test("期間を切り替えられる", async ({ page }) => {
         // 「直近3日間」をクリック
-        await page.click('button:has-text("直近3日間")');
+        await safeClick(page, 'button:has-text("直近3日間")');
         await page.waitForTimeout(1000);
 
         // 「1週間」をクリック
-        await page.click('button:has-text("1週間")');
+        await safeClick(page, 'button:has-text("1週間")');
         await page.waitForTimeout(1000);
 
         // 「3週間」をクリック
-        await page.click('button:has-text("3週間")');
+        await safeClick(page, 'button:has-text("3週間")');
         await page.waitForTimeout(1000);
 
         // エラーが発生していないことを確認
@@ -69,7 +70,7 @@ test.describe("分析結果画面（AnalysisForm）", () => {
 
     test("分析を開始できる", async ({ page }) => {
         // 分析開始ボタンをクリック
-        await page.click('button:has-text("分析を開始")');
+        await safeClick(page, 'button:has-text("分析を開始")');
 
         // ローディング状態を確認
         const loadingIndicator = page.locator("text=分析中..., text=読み込み中...");

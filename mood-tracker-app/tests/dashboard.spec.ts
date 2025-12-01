@@ -5,6 +5,7 @@ import {
     clickAndWait,
     expectPageTitle,
     navigateTo,
+    safeClick,
 } from "./helpers/test-helpers";
 
 test.describe("ダッシュボード機能", () => {
@@ -128,7 +129,8 @@ test.describe("ダッシュボード機能", () => {
 
     test("AIアドバイスを生成できる", async ({ page }) => {
         // リフレッシュボタンをクリック
-        await page.click(
+        await safeClick(
+            page,
             '.refresh-btn, button[title*="新しいアドバイスを生成"]'
         );
 
