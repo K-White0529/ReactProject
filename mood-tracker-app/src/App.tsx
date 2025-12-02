@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { isAuthenticated } from './services/authService';
 import PerformanceReport from './components/PerformanceReport';
+import WebVitalsDashboard from './components/WebVitalsDashboard';
 
 // ローディングコンポーネント
 const LoadingSpinner = () => (
@@ -122,8 +123,9 @@ function App() {
         </Suspense>
       )}
       
-      {/* パフォーマンスレポート（開発環境のみ） */}
+      {/* パフォーマンス監視（開発環境のみ） */}
       <PerformanceReport />
+      <WebVitalsDashboard />
     </div>
   );
 }
