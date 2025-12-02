@@ -127,6 +127,36 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
 }
 
 /**
+ * ダッシュボードの表示を待つ（複数のセレクタを試行）
+ */
+async function waitForDashboard(page: Page) {
+    // 複数のセレクタを試行（優先度順）
+    const selectors = [
+        '.dashboard-content',           // ダッシュボードのコンテナ
+        'h1.page-title',                // ページタイトル
+        '.stats-grid',                  // 統計グリッド
+        'h1:has-text("ダッシュボード")',  // h1要素（最後の手段）
+    ];
+    
+    for (const selector of selectors) {
+        try {
+            await page.waitForSelector(selector, { 
+                state: 'visible',
+                timeout: TIMEOUTS.NAVIGATION 
+            });
+            console.log(`Dashboard loaded, detected by: ${selector}`);
+            return;
+        } catch (error) {
+            console.log(`Selector "${selector}" not found, trying next...`);
+            continue;
+        }
+    }
+    
+    // どのセレクターも見つからなかった場合
+    throw new Error('Dashboard did not load within timeout');
+}
+
+/**
  * テストユーザーを作成してログインする
  * @returns 作成したユーザーの情報
  */
@@ -164,9 +194,12 @@ export async function createAndLoginUser(page: Page): Promise<{
     // 登録ボタンをクリック
     await clickAndWait(page, 'button:has-text("登録")');
 
-    // ダッシュボードに遷移することを確認
+    // ダッシュボードに遷移することを確認（複数セレクタで試行）
+    await waitForDashboard(page);
+    
+    // 最終確認: h1要素が表示されることを確認
     await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
+        timeout: TIMEOUTS.ELEMENT_VISIBLE,
     });
 
     return userInfo;
@@ -194,9 +227,12 @@ export async function loginUser(
     // ログインボタンをクリック
     await clickAndWait(page, 'button:has-text("ログイン")');
 
-    // ダッシュボードに遷移することを確認
+    // ダッシュボードに遷移することを確認（複数セレクタで試行）
+    await waitForDashboard(page);
+    
+    // 最終確認: h1要素が表示されることを確認
     await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
+        timeout: TIMEOUTS.ELEMENT_VISIBLE,
     });
 }
 
