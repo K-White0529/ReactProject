@@ -10,6 +10,7 @@ import {
 } from '../controllers/recordController';
 import { authenticateToken } from '../middleware/auth';
 import { recordValidation, validate } from '../middleware/validation';
+import { conditionalCsrfProtection } from '../middleware/csrf';
 
 const router = Router();
 
@@ -29,12 +30,12 @@ router.get('/', getRecords);
 router.get('/:id', getRecordById);
 
 // POST /api/records - 記録作成
-router.post('/', recordValidation, validate, createRecord);
+router.post('/', conditionalCsrfProtection, recordValidation, validate, createRecord);
 
 // PUT /api/records/:id - 記録更新
-router.put('/:id', recordValidation, validate, updateRecord);
+router.put('/:id', conditionalCsrfProtection, recordValidation, validate, updateRecord);
 
 // DELETE /api/records/:id - 記録削除
-router.delete('/:id', deleteRecord);
+router.delete('/:id', conditionalCsrfProtection, deleteRecord);
 
 export default router;

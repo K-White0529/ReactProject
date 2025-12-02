@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getCategories, getQuestions, saveAnswers, generateQuestions, getCategoryScores, getCategoryTrends, getRandomQuestions, analyzeUserData } from '../controllers/analysisController';
 import { authenticateToken } from '../middleware/auth';
+import { conditionalCsrfProtection } from '../middleware/csrf';
 
 const router = Router();
 
@@ -14,10 +15,10 @@ router.get('/categories', getCategories);
 router.get('/questions', getQuestions);
 
 // POST /api/analysis/answers - 回答保存
-router.post('/answers', saveAnswers);
+router.post('/answers', conditionalCsrfProtection, saveAnswers);
 
 // POST /api/analysis/generate - AI質問生成（テスト用）
-router.post('/generate', generateQuestions);
+router.post('/generate', conditionalCsrfProtection, generateQuestions);
 
 // GET /api/analysis/scores - 観点別平均スコア取得
 router.get('/scores', getCategoryScores);
