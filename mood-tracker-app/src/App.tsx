@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { isAuthenticated } from './services/authService';
+import PerformanceReport from './components/PerformanceReport';
 
 // ローディングコンポーネント
 const LoadingSpinner = () => (
@@ -120,6 +121,9 @@ function App() {
           )}
         </Suspense>
       )}
+      
+      {/* パフォーマンスレポート（開発環境のみ） */}
+      <PerformanceReport />
     </div>
   );
 }

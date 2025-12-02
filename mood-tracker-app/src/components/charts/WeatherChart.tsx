@@ -1,3 +1,5 @@
+import { useMemo, memo } from 'react';
+import { useRenderLogger } from '../../utils/performanceMonitor';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,80 +31,87 @@ interface WeatherChartProps {
 }
 
 function WeatherChart({ data }: WeatherChartProps) {
-  // データは既に時間単位でグループ化されている (dateフィールドが 'MM/DD HH24:00' 形式)
-  const labels = data.map(d => d.date);
-  const temperatures = data.map(d => d.avg_temperature);
-  const humidities = data.map(d => d.avg_humidity);
+  useRenderLogger('WeatherChart');
+  
+  // 気温軸の範囲計算をuseMemoでメモ化
+  const { tempMin, tempMax, tempStepSize } = useMemo(() => {
+    const temperatures = data.map(d => d.avg_temperature).filter((t): t is number => t !== null && t !== undefined);
+    
+    let min = 0;
+    let max = 40;
+    let stepSize = 5;
 
-  // 気温軸の範囲と間隔を計算
-  const validTemperatures = temperatures.filter((t): t is number => t !== null && t !== undefined);
-  let tempMin = 0;
-  let tempMax = 40;
-  let tempStepSize = 5;
+    if (temperatures.length > 0) {
+      const dataMin = Math.min(...temperatures);
+      const dataMax = Math.max(...temperatures);
 
-  if (validTemperatures.length > 0) {
-    const dataMin = Math.min(...validTemperatures);
-    const dataMax = Math.max(...validTemperatures);
-
-    // 最小値の決定：0度を下回る場合は10の倍数に切り下げ
-    if (dataMin < 0) {
-      tempMin = Math.floor(dataMin / 10) * 10;
-    }
-
-    // 最大値の決定：40度を上回る場合は10の倍数に切り上げ
-    if (dataMax > 40) {
-      tempMax = Math.ceil(dataMax / 10) * 10;
-    }
-
-    // 間隔の決定：範囲に応じて調整
-    const range = tempMax - tempMin;
-    if (range <= 20) {
-      tempStepSize = 2;
-    } else if (range <= 40) {
-      tempStepSize = 5;
-    } else {
-      tempStepSize = 10;
-    }
-  }
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: '気温 (℃)',
-        data: temperatures,
-        borderColor: 'rgb(255, 211, 61)',
-        backgroundColor: 'rgba(255, 211, 61, 0.1)',
-        tension: 0.1,
-        fill: true,
-        yAxisID: 'y',
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: '湿度 (%)',
-        data: humidities,
-        borderColor: 'rgb(107, 203, 119)',
-        backgroundColor: 'rgba(107, 203, 119, 0.1)',
-        tension: 0.1,
-        fill: true,
-        yAxisID: 'y1',
-        pointRadius: 4,
-        pointHoverRadius: 6,
+      if (dataMin < 0) {
+        min = Math.floor(dataMin / 10) * 10;
       }
-    ]
-  };
 
-  const options: ChartOptions<'line'> = {
+      if (dataMax > 40) {
+        max = Math.ceil(dataMax / 10) * 10;
+      }
+
+      const range = max - min;
+      if (range <= 20) {
+        stepSize = 2;
+      } else if (range <= 40) {
+        stepSize = 5;
+      } else {
+        stepSize = 10;
+      }
+    }
+
+    return { tempMin: min, tempMax: max, tempStepSize: stepSize };
+  }, [data]);
+
+  // チャートデータをuseMemoでメモ化
+  const chartData = useMemo(() => {
+    const labels = data.map(d => d.date);
+    const temperatures = data.map(d => d.avg_temperature);
+    const humidities = data.map(d => d.avg_humidity);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: '気温 (℃)',
+          data: temperatures,
+          borderColor: 'rgb(255, 211, 61)',
+          backgroundColor: 'rgba(255, 211, 61, 0.1)',
+          tension: 0.1,
+          fill: true,
+          yAxisID: 'y',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+        {
+          label: '湿度 (%)',
+          data: humidities,
+          borderColor: 'rgb(107, 203, 119)',
+          backgroundColor: 'rgba(107, 203, 119, 0.1)',
+          tension: 0.1,
+          fill: true,
+          yAxisID: 'y1',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }
+      ]
+    };
+  }, [data]);
+
+  // オプションをuseMemoでメモ化
+  const options: ChartOptions<'line'> = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index',
+      mode: 'index' as const,
       intersect: false,
     },
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
         labels: {
           usePointStyle: true,
           padding: 15,
@@ -122,7 +131,6 @@ function WeatherChart({ data }: WeatherChartProps) {
         displayColors: true,
         callbacks: {
           title: (context) => {
-            // 'MM/DD HH:00' 形式で表示
             return context[0].label;
           },
           label: (context) => {
@@ -131,7 +139,6 @@ function WeatherChart({ data }: WeatherChartProps) {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              // データセットに応じて単位を追加
               if (context.dataset.label?.includes('気温')) {
                 label += context.parsed.y.toFixed(1) + '°C';
               } else if (context.dataset.label?.includes('湿度')) {
@@ -147,9 +154,9 @@ function WeatherChart({ data }: WeatherChartProps) {
     },
     scales: {
       y: {
-        type: 'linear',
+        type: 'linear' as const,
         display: true,
-        position: 'left',
+        position: 'left' as const,
         title: {
           display: true,
           text: '気温 (℃)',
@@ -168,9 +175,9 @@ function WeatherChart({ data }: WeatherChartProps) {
         }
       },
       y1: {
-        type: 'linear',
+        type: 'linear' as const,
         display: true,
-        position: 'right',
+        position: 'right' as const,
         title: {
           display: true,
           text: '湿度 (%)',
@@ -199,7 +206,7 @@ function WeatherChart({ data }: WeatherChartProps) {
         }
       }
     }
-  };
+  }), [tempMin, tempMax, tempStepSize]);
 
   return (
     <div style={{ height: '300px', position: 'relative' }}>
@@ -208,4 +215,4 @@ function WeatherChart({ data }: WeatherChartProps) {
   );
 }
 
-export default WeatherChart;
+export default memo(WeatherChart);
