@@ -5,15 +5,41 @@ import {
     clickAndWait,
     expectPageTitle,
     navigateTo,
+    deleteTestUser,
+    safeGoto,
+    safeFill,
 } from "./helpers/test-helpers";
 
 test.describe("記録一覧画面（RecordList）", () => {
+    let testUsername: string;
+
+    test.beforeAll(async ({ browser }) => {
+        // 全テスト開始前に1回だけユーザーを作成
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        const userInfo = await createAndLoginUser(page);
+        testUsername = userInfo.username;
+        await context.close();
+    });
+
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 各テスト前にログイン
+        await safeGoto(page, "/");
+        await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
+        await safeFill(page, 'input[name="username"]', testUsername);
+        await safeFill(page, 'input[name="password"]', "Test1234!");
+        await clickAndWait(page, 'button:has-text("ログイン")');
+        await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({ timeout: TIMEOUTS.NAVIGATION });
 
         // 記録一覧ページに移動
         await navigateTo(page, "記録一覧", "記録一覧");
+    });
+
+    test.afterAll(async () => {
+        // 全テスト完了後にテストユーザーを削除
+        if (testUsername) {
+            await deleteTestUser(testUsername);
+        }
     });
 
     test("ページの基本要素が表示される", async ({ page }) => {

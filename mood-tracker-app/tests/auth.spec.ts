@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { deleteTestUser } from "./helpers/test-helpers";
 
 test.describe("認証機能", () => {
     test("新規登録ができる", async ({ page }) => {
@@ -17,7 +18,8 @@ test.describe("認証機能", () => {
 
         // フォームに入力
         const timestamp = Date.now();
-        await page.fill('input[name="username"]', `testuser${timestamp}`);
+        const testUsername = `testuser${timestamp}`;
+        await page.fill('input[name="username"]', testUsername);
         await page.fill('input[name="email"]', `test${timestamp}@example.com`);
         await page.fill('input[name="password"]', "Test1234!");
 
@@ -31,6 +33,9 @@ test.describe("認証機能", () => {
         await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible(
             { timeout: 20000 }
         );
+
+        // テスト後にクリーンアップ
+        await deleteTestUser(testUsername);
     });
 
     test("ログイン画面と新規登録画面を切り替えられる", async ({ page }) => {

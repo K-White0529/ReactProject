@@ -1,17 +1,96 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { getRecords, getRecordStats, getChartData } from '../services/recordService';
 import type { Record, RecordStats, ChartData } from '../types';
 import { HiChartBar, HiCalendar, HiEmojiHappy, HiLightningBolt, HiPlus } from 'react-icons/hi';
 import MoodChart from './charts/MoodChart';
 import WeatherChart from './charts/WeatherChart';
 import AdviceCard from './AdviceCard';
+import { useRenderLogger } from '../utils/performanceMonitor';
 import './Dashboard.css';
 
 interface DashboardProps {
 	onNavigate?: (page: string) => void;
 }
 
+// 統計カードコンポーネントをメモ化
+interface StatCardProps {
+	icon: React.ReactNode;
+	label: string;
+	value: string | number;
+	gradient: string;
+}
+
+const StatCard = memo(({ icon, label, value, gradient }: StatCardProps) => (
+	<div className="stat-card">
+		<div className="stat-icon" style={{ background: gradient }}>
+			{icon}
+		</div>
+		<div className="stat-content">
+			<div className="stat-label">{label}</div>
+			<div className="stat-value">{value}</div>
+		</div>
+	</div>
+));
+
+StatCard.displayName = 'StatCard';
+
+// 記録カードコンポーネントをメモ化
+interface RecordCardProps {
+	record: Record;
+	onClick: (id: number) => void;
+}
+
+const RecordCard = memo(({ record, onClick }: RecordCardProps) => {
+	const handleClick = useCallback(() => {
+		onClick(record.id);
+	}, [record.id, onClick]);
+
+	const formattedDate = useMemo(() => {
+		return new Date(record.recorded_at).toLocaleString('ja-JP', {
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}, [record.recorded_at]);
+
+	const truncatedActivity = useMemo(() => {
+		if (!record.activities_done) return null;
+		return record.activities_done.length > 50
+			? `${record.activities_done.substring(0, 50)}...`
+			: record.activities_done;
+	}, [record.activities_done]);
+
+	return (
+		<div className="record-card clickable" onClick={handleClick}>
+			<div className="record-date">{formattedDate}</div>
+			<div className="record-scores">
+				{record.emotion_score && (
+					<div className="score-item">
+						<span className="score-label">気分</span>
+						<span className="score-value">{record.emotion_score}/10</span>
+					</div>
+				)}
+				{record.motivation_score && (
+					<div className="score-item">
+						<span className="score-label">やる気</span>
+						<span className="score-value">{record.motivation_score}/10</span>
+					</div>
+				)}
+			</div>
+			{truncatedActivity && (
+				<div className="record-activity">{truncatedActivity}</div>
+			)}
+		</div>
+	);
+});
+
+RecordCard.displayName = 'RecordCard';
+
 function Dashboard({ onNavigate }: DashboardProps) {
+	useRenderLogger('Dashboard');
+	
 	const [records, setRecords] = useState<Record[]>([]);
 	const [stats, setStats] = useState<RecordStats | null>(null);
 	const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -20,9 +99,28 @@ function Dashboard({ onNavigate }: DashboardProps) {
 	const [chartRange, setChartRange] = useState<string>('3weeks');
 	const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
+	// データ読み込み関数をuseCallbackでメモ化
+	const loadData = useCallback(async () => {
+		try {
+			setLoading(true);
+			const [recordsData, statsData, chartDataResult] = await Promise.all([
+				getRecords(10),
+				getRecordStats(),
+				getChartData(chartRange)
+			]);
+			setRecords(recordsData);
+			setStats(statsData);
+			setChartData(chartDataResult);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+		} finally {
+			setLoading(false);
+		}
+	}, [chartRange]);
+
 	useEffect(() => {
 		loadData();
-	}, [chartRange]);
+	}, [loadData]);
 
 	// 記録保存成功イベントをリスン
 	useEffect(() => {
@@ -40,39 +138,84 @@ function Dashboard({ onNavigate }: DashboardProps) {
 		};
 	}, []);
 
-	const handleCloseNotification = () => {
+	// イベントハンドラーをuseCallbackでメモ化
+	const handleCloseNotification = useCallback(() => {
 		setShowSuccessNotification(false);
-	};
+	}, []);
 
-	const loadData = async () => {
-		try {
-			setLoading(true);
-			const [recordsData, statsData, chartDataResult] = await Promise.all([
-				getRecords(10),
-				getRecordStats(),
-				getChartData(chartRange)
-			]);
-			setRecords(recordsData);
-			setStats(statsData);
-			setChartData(chartDataResult);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleQuickAction = (page: string) => {
+	const handleQuickAction = useCallback((page: string) => {
 		if (onNavigate) {
 			onNavigate(page);
 		}
-	};
+	}, [onNavigate]);
 
-	const handleRecordClick = (recordId: number) => {
+	const handleRecordClick = useCallback((recordId: number) => {
 		if (onNavigate) {
 			onNavigate(`record-detail/${recordId}`);
 		}
-	};
+	}, [onNavigate]);
+
+	const handleRangeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+		setChartRange(e.target.value);
+	}, []);
+
+	// 統計値の表示をuseMemoでメモ化
+	const statsDisplay = useMemo(() => {
+		if (!stats) return null;
+
+		return (
+			<div className="stats-grid">
+				<StatCard
+					icon={<HiChartBar size={28} />}
+					label="総記録数"
+					value={stats.total_records || 0}
+					gradient="linear-gradient(135deg, #FF6B9D 0%, #FFA07A 100%)"
+				/>
+				<StatCard
+					icon={<HiCalendar size={28} />}
+					label="今週の記録"
+					value={stats.this_week_records || 0}
+					gradient="linear-gradient(135deg, #B4A7D6 0%, #D4C5F9 100%)"
+				/>
+				<StatCard
+					icon={<HiEmojiHappy size={28} />}
+					label="平均気分"
+					value={stats.avg_emotion_score ? `${stats.avg_emotion_score}/10` : '-'}
+					gradient="linear-gradient(135deg, #FFD93D 0%, #FFA500 100%)"
+				/>
+				<StatCard
+					icon={<HiLightningBolt size={28} />}
+					label="平均モチベーション"
+					value={stats.avg_motivation_score ? `${stats.avg_motivation_score}/10` : '-'}
+					gradient="linear-gradient(135deg, #6BCB77 0%, #4D96A9 100%)"
+				/>
+			</div>
+		);
+	}, [stats]);
+
+	// 記録リストの表示をuseMemoでメモ化
+	const recordsList = useMemo(() => {
+		if (records.length === 0) {
+			return (
+				<div className="empty-state">
+					<p>まだ記録がありません</p>
+					<p>「データ登録」から記録を追加してみましょう！</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="records-grid">
+				{records.map((record) => (
+					<RecordCard
+						key={record.id}
+						record={record}
+						onClick={handleRecordClick}
+					/>
+				))}
+			</div>
+		);
+	}, [records, handleRecordClick]);
 
 	if (loading) {
 		return <div className="loading">読み込み中...</div>;
@@ -107,7 +250,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 				<select
 					id="chart-range"
 					value={chartRange}
-					onChange={(e) => setChartRange(e.target.value)}
+					onChange={handleRangeChange}
 					className="range-select"
 				>
 					<option value="today">今日のデータ</option>
@@ -142,51 +285,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			</div>
 
 			{/* 統計パネル */}
-			<div className="stats-grid">
-				<div className="stat-card">
-					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #FF6B9D 0%, #FFA07A 100%)' }}>
-						<HiChartBar size={28} />
-					</div>
-					<div className="stat-content">
-						<div className="stat-label">総記録数</div>
-						<div className="stat-value">{stats?.total_records || 0}</div>
-					</div>
-				</div>
-
-				<div className="stat-card">
-					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #B4A7D6 0%, #D4C5F9 100%)' }}>
-						<HiCalendar size={28} />
-					</div>
-					<div className="stat-content">
-						<div className="stat-label">今週の記録</div>
-						<div className="stat-value">{stats?.this_week_records || 0}</div>
-					</div>
-				</div>
-
-				<div className="stat-card">
-					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #FFD93D 0%, #FFA500 100%)' }}>
-						<HiEmojiHappy size={28} />
-					</div>
-					<div className="stat-content">
-						<div className="stat-label">平均気分</div>
-						<div className="stat-value">
-							{stats?.avg_emotion_score ? `${stats.avg_emotion_score}/10` : '-'}
-						</div>
-					</div>
-				</div>
-
-				<div className="stat-card">
-					<div className="stat-icon" style={{ background: 'linear-gradient(135deg, #6BCB77 0%, #4D96A9 100%)' }}>
-						<HiLightningBolt size={28} />
-					</div>
-					<div className="stat-content">
-						<div className="stat-label">平均モチベーション</div>
-						<div className="stat-value">
-							{stats?.avg_motivation_score ? `${stats.avg_motivation_score}/10` : '-'}
-						</div>
-					</div>
-				</div>
-			</div>
+			{statsDisplay}
 
 			{/* クイックアクション */}
 			<div className="quick-actions">
@@ -206,56 +305,10 @@ function Dashboard({ onNavigate }: DashboardProps) {
 			{/* 最近の記録 */}
 			<div className="recent-records">
 				<h2 className="section-title">最近の記録</h2>
-				{records.length === 0 ? (
-					<div className="empty-state">
-						<p>まだ記録がありません</p>
-						<p>「データ登録」から記録を追加してみましょう！</p>
-					</div>
-				) : (
-					<div className="records-grid">
-						{records.map((record) => (
-							<div
-								key={record.id}
-								className="record-card clickable"
-								onClick={() => handleRecordClick(record.id)}
-							>
-								<div className="record-date">
-									{new Date(record.recorded_at).toLocaleString('ja-JP', {
-										year: 'numeric',
-										month: '2-digit',
-										day: '2-digit',
-										hour: '2-digit',
-										minute: '2-digit'
-									})}
-								</div>
-								<div className="record-scores">
-									{record.emotion_score && (
-										<div className="score-item">
-											<span className="score-label">気分</span>
-											<span className="score-value">{record.emotion_score}/10</span>
-										</div>
-									)}
-									{record.motivation_score && (
-										<div className="score-item">
-											<span className="score-label">やる気</span>
-											<span className="score-value">{record.motivation_score}/10</span>
-										</div>
-									)}
-								</div>
-								{record.activities_done && (
-									<div className="record-activity">
-										{record.activities_done.length > 50
-											? `${record.activities_done.substring(0, 50)}...`
-											: record.activities_done}
-									</div>
-								)}
-							</div>
-						))}
-					</div>
-				)}
+				{recordsList}
 			</div>
 		</div>
 	);
 }
 
-export default Dashboard;
+export default memo(Dashboard);

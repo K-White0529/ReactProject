@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -11,8 +11,8 @@ import {
 
 test.describe("記録作成画面（RecordForm）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
 
         // 記録作成画面に移動
         await clickAndWait(page, 'button:has-text("データを登録")');

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -10,8 +10,8 @@ import {
 
 test.describe("ダッシュボード機能", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
     });
 
     test("ダッシュボードの主要要素が表示される", async ({ page }) => {

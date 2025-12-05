@@ -38,7 +38,7 @@ function App() {
 
   useEffect(() => {
     setAuthenticated(isAuthenticated());
-    
+
     // CSRFトークンを初期化（エラーを無視）
     fetchCsrfToken().catch((error) => {
       console.warn('初期CSRFトークン取得失敗:', error);
@@ -128,7 +128,7 @@ function App() {
           )}
         </Suspense>
       )}
-      
+
       {/* パフォーマンス監視（開発環境のみ） */}
       <PerformanceReport />
       <WebVitalsDashboard />

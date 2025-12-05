@@ -73,6 +73,12 @@ jobs:
         env:
           PGPASSWORD: postgres
 
+      - name: Create test user
+        working-directory: mood-tracker-api
+        run: node scripts/create-test-user.js
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mood_tracker_test
+
       - name: Build backend
         working-directory: mood-tracker-api
         run: npm run build
