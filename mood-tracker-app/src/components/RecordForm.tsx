@@ -1,18 +1,105 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { createRecord } from '../services/recordService';
 import { getCurrentWeather } from '../services/weatherService';
 import { getRandomQuestions, saveAnswers } from '../services/analysisService';
 import type { RecordInput, CurrentWeather, AnalysisQuestion, AnalysisAnswerInput } from '../types';
+import { useRenderLogger } from '../utils/performanceMonitor';
 import './RecordForm.css';
 
 interface RecordFormProps {
 	onNavigate?: (page: string) => void;
 }
 
-function RecordForm({ onNavigate }: RecordFormProps) {
-	const [currentStep, setCurrentStep] = useState<number>(1);
+// 天気アイコンを取得する純粋関数
+const getWeatherIcon = (condition: string): string => {
+	const lower = condition.toLowerCase();
+	if (lower.includes('clear') || lower.includes('sunny')) return '☀️';
+	if (lower.includes('cloud')) return '☁️';
+	if (lower.includes('rain')) return '🌧️';
+	if (lower.includes('snow')) return '❄️';
+	return '🌤️';
+};
 
-	// Step1: 基本データ
+// 天気情報カードコンポーネント
+interface WeatherCardProps {
+	weather: CurrentWeather | null;
+	loading: boolean;
+}
+
+const WeatherCard = memo(({ weather, loading }: WeatherCardProps) => {
+	if (loading) {
+		return (
+			<div className="weather-info-card loading">
+				<div className="weather-loading">天気情報を読み込み中...</div>
+			</div>
+		);
+	}
+
+	if (!weather) return null;
+
+	return (
+		<div className="weather-info-card">
+			<div className="weather-icon-large">
+				{getWeatherIcon(weather.weatherCondition)}
+			</div>
+			<div className="weather-details">
+				<div className="weather-location">{weather.location}</div>
+				<div className="weather-condition">{weather.weatherCondition}</div>
+				<div className="weather-metrics">
+					<span className="weather-metric">🌡️ {weather.temperature}°C</span>
+					<span className="weather-metric">💧 {weather.humidity}%</span>
+				</div>
+			</div>
+		</div>
+	);
+});
+
+WeatherCard.displayName = 'WeatherCard';
+
+// 質問項目コンポーネント
+interface QuestionItemProps {
+	question: AnalysisQuestion;
+	index: number;
+	value: number;
+	onChange: (questionId: number, score: number) => void;
+}
+
+const QuestionItem = memo(({ question, index, value, onChange }: QuestionItemProps) => {
+	const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		onChange(question.id, parseInt(e.target.value));
+	}, [question.id, onChange]);
+
+	return (
+		<div className="question-item">
+			<label htmlFor={`question-${question.id}`} className="question-label">
+				<span className="question-number">{index + 1}.</span>
+				<span className="question-text">{question.question_text}</span>
+				<span className="slider-value">{value}</span>
+			</label>
+			<input
+				type="range"
+				id={`question-${question.id}`}
+				min="1"
+				max="10"
+				value={value}
+				onChange={handleChange}
+				className="slider"
+			/>
+			<div className="slider-labels">
+				<span>1 低い</span>
+				<span>5</span>
+				<span>10 高い</span>
+			</div>
+		</div>
+	);
+});
+
+QuestionItem.displayName = 'QuestionItem';
+
+function RecordForm({ onNavigate }: RecordFormProps) {
+	useRenderLogger('RecordForm');
+	
+	const [currentStep, setCurrentStep] = useState<number>(1);
 	const [formData, setFormData] = useState<RecordInput>({
 		sleep_hours: undefined,
 		sleep_quality: undefined,
@@ -25,23 +112,16 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 		motivation_score: undefined,
 		activities_done: ''
 	});
-
-	// Step2: 質問と回答
 	const [questions, setQuestions] = useState<AnalysisQuestion[]>([]);
 	const [answers, setAnswers] = useState<Map<number, number>>(new Map());
-
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState(false);
 	const [weather, setWeather] = useState<CurrentWeather | null>(null);
 	const [weatherLoading, setWeatherLoading] = useState(false);
 
-	// 気象データを取得
-	useEffect(() => {
-		loadWeather();
-	}, []);
-
-	const loadWeather = async () => {
+	// 天気データの読み込みをuseCallbackでメモ化
+	const loadWeather = useCallback(async () => {
 		try {
 			setWeatherLoading(true);
 			const data = await getCurrentWeather();
@@ -51,38 +131,36 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 		} finally {
 			setWeatherLoading(false);
 		}
-	};
+	}, []);
 
-	const handleNumberChange = (field: keyof RecordInput, value: string) => {
+	useEffect(() => {
+		loadWeather();
+	}, [loadWeather]);
+
+	// イベントハンドラーをuseCallbackでメモ化
+	const handleNumberChange = useCallback((field: keyof RecordInput, value: string) => {
 		const numValue = value === '' ? undefined : parseFloat(value);
-		setFormData({
-			...formData,
-			[field]: numValue
+		setFormData(prev => ({ ...prev, [field]: numValue }));
+	}, []);
+
+	const handleSliderChange = useCallback((field: keyof RecordInput, value: number) => {
+		setFormData(prev => ({ ...prev, [field]: value }));
+	}, []);
+
+	const handleTextChange = useCallback((field: keyof RecordInput, value: string) => {
+		setFormData(prev => ({ ...prev, [field]: value }));
+	}, []);
+
+	const handleAnswerChange = useCallback((questionId: number, score: number) => {
+		setAnswers(prev => {
+			const newAnswers = new Map(prev);
+			newAnswers.set(questionId, score);
+			return newAnswers;
 		});
-	};
+	}, []);
 
-	const handleSliderChange = (field: keyof RecordInput, value: number) => {
-		setFormData({
-			...formData,
-			[field]: value
-		});
-	};
-
-	const handleTextChange = (field: keyof RecordInput, value: string) => {
-		setFormData({
-			...formData,
-			[field]: value
-		});
-	};
-
-	const handleAnswerChange = (questionId: number, score: number) => {
-		const newAnswers = new Map(answers);
-		newAnswers.set(questionId, score);
-		setAnswers(newAnswers);
-	};
-
-	// Step1の必須項目チェック（自由記述以外）
-	const validateStep1 = (): { isValid: boolean; missingFields: string[] } => {
+	// バリデーション結果をuseMemoでメモ化
+	const step1Validation = useMemo(() => {
 		const missingFields: string[] = [];
 
 		if (formData.sleep_hours === undefined) missingFields.push('睡眠時間');
@@ -98,25 +176,21 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 			isValid: missingFields.length === 0,
 			missingFields
 		};
-	};
+	}, [formData]);
 
-	// Step2の全質問回答チェック
-	const validateStep2 = (): { isValid: boolean; unansweredCount: number } => {
+	const step2Validation = useMemo(() => {
 		const unansweredCount = questions.length - answers.size;
 
 		return {
 			isValid: unansweredCount === 0,
 			unansweredCount
 		};
-	};
+	}, [questions.length, answers.size]);
 
-	// Step1からStep2へ進む
-	const handleProceedToStep2 = async () => {
-		// バリデーション
-		const validation = validateStep1();
-
-		if (!validation.isValid) {
-			setError(`以下の項目を入力してください: ${validation.missingFields.join('、')}`);
+	// Step遷移ハンドラー
+	const handleProceedToStep2 = useCallback(async () => {
+		if (!step1Validation.isValid) {
+			setError(`以下の項目を入力してください: ${step1Validation.missingFields.join('、')}`);
 			window.scrollTo({ top: 0, behavior: 'smooth' });
 			setTimeout(() => setError(''), 5000);
 			return;
@@ -126,7 +200,6 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 			setLoading(true);
 			setError('');
 
-			// ランダムな質問を取得（各カテゴリ5問）
 			const randomQuestions = await getRandomQuestions(5);
 			setQuestions(randomQuestions);
 
@@ -139,21 +212,16 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [step1Validation]);
 
-	// Step2からStep1へ戻る
-	const handleBackToStep1 = () => {
+	const handleBackToStep1 = useCallback(() => {
 		setCurrentStep(1);
-		setAnswers(new Map()); // 回答をリセット
-	};
+		setAnswers(new Map());
+	}, []);
 
-	// 最終的な保存処理
-	const handleSubmit = async () => {
-		// バリデーション
-		const validation = validateStep2();
-
-		if (!validation.isValid) {
-			setError(`未回答の質問が${validation.unansweredCount}問あります。全ての質問に回答してください。`);
+	const handleSubmit = useCallback(async () => {
+		if (!step2Validation.isValid) {
+			setError(`未回答の質問が${step2Validation.unansweredCount}問あります。全ての質問に回答してください。`);
 			window.scrollTo({ top: 0, behavior: 'smooth' });
 			setTimeout(() => setError(''), 5000);
 			return;
@@ -164,10 +232,8 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 			setError('');
 			setSuccess(false);
 
-			// 基本データを保存
 			const record = await createRecord(formData);
 
-			// 回答データを保存
 			if (answers.size > 0 && record.id) {
 				const answerList: AnalysisAnswerInput[] = Array.from(answers.entries()).map(
 					([question_id, answer_score]) => ({
@@ -180,7 +246,7 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 				await saveAnswers(answerList);
 			}
 
-			// フォームをリセット
+			// フォームリセット
 			setFormData({
 				sleep_hours: undefined,
 				sleep_quality: undefined,
@@ -196,10 +262,8 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 			setAnswers(new Map());
 			setCurrentStep(1);
 
-			// ダッシュボードに遷移して成功メッセージを表示
 			if (onNavigate) {
 				onNavigate('dashboard');
-				// 遷移後に成功メッセージを表示するため、少し遅延させる
 				setTimeout(() => {
 					const event = new CustomEvent('recordSaved');
 					window.dispatchEvent(event);
@@ -212,55 +276,33 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [step2Validation, formData, answers, onNavigate]);
 
-	const getWeatherIcon = (condition: string) => {
-		const lower = condition.toLowerCase();
-		if (lower.includes('clear') || lower.includes('sunny')) return '☀️';
-		if (lower.includes('cloud')) return '☁️';
-		if (lower.includes('rain')) return '🌧️';
-		if (lower.includes('snow')) return '❄️';
-		return '🌤️';
-	};
+	// 質問リストの表示をuseMemoでメモ化
+	const questionsList = useMemo(() => {
+		return questions.map((question, index) => (
+			<QuestionItem
+				key={question.id}
+				question={question}
+				index={index}
+				value={answers.get(question.id) ?? 5}
+				onChange={handleAnswerChange}
+			/>
+		));
+	}, [questions, answers, handleAnswerChange]);
 
 	return (
 		<div className="record-form-container">
 			<h1 className="page-title">データ登録</h1>
 
-			{/* 気象情報カード */}
 			{currentStep === 1 && (
-				<>
-					{weatherLoading ? (
-						<div className="weather-info-card loading">
-							<div className="weather-loading">天気情報を読み込み中...</div>
-						</div>
-					) : weather ? (
-						<div className="weather-info-card">
-							<div className="weather-icon-large">
-								{getWeatherIcon(weather.weatherCondition)}
-							</div>
-							<div className="weather-details">
-								<div className="weather-location">{weather.location}</div>
-								<div className="weather-condition">{weather.weatherCondition}</div>
-								<div className="weather-metrics">
-									<span className="weather-metric">
-										🌡️ {weather.temperature}°C
-									</span>
-									<span className="weather-metric">
-										💧 {weather.humidity}%
-									</span>
-								</div>
-							</div>
-						</div>
-					) : null}
-				</>
+				<WeatherCard weather={weather} loading={weatherLoading} />
 			)}
 
 			{error && <div className="error-message">{error}</div>}
 			{success && <div className="success-message">記録を保存しました！</div>}
 
 			<div className="record-form">
-				{/* Step 1: 基本データ入力 */}
 				{currentStep === 1 && (
 					<>
 						{/* 睡眠セクション */}
@@ -473,7 +515,6 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 							</div>
 						</section>
 
-						{/* Step1のボタン */}
 						<div className="form-actions">
 							<button
 								type="button"
@@ -487,43 +528,17 @@ function RecordForm({ onNavigate }: RecordFormProps) {
 					</>
 				)}
 
-				{/* Step 2: 質問回答 */}
 				{currentStep === 2 && (
 					<>
 						<div className="step-indicator">
 							<p>以下の質問に回答してください（全{questions.length}問）</p>
 						</div>
 
-						{questions.map((question, index) => (
-							<div key={question.id} className="question-item">
-								<label htmlFor={`question-${question.id}`} className="question-label">
-									<span className="question-number">{index + 1}.</span>
-									<span className="question-text">{question.question_text}</span>
-									{answers.has(question.id) && (
-										<span className="slider-value">{answers.get(question.id)}</span>
-									)}
-								</label>
-								<input
-									type="range"
-									id={`question-${question.id}`}
-									min="1"
-									max="10"
-									value={answers.get(question.id) ?? 5}
-									onChange={(e) => handleAnswerChange(question.id, parseInt(e.target.value))}
-									className="slider"
-								/>
-								<div className="slider-labels">
-									<span>1 低い</span>
-									<span>5</span>
-									<span>10 高い</span>
-								</div>
-							</div>
-						))}
+						{questionsList}
 					</>
 				)}
 			</div>
 
-			{/* フローティングボタン（Step2のみ表示） */}
 			{currentStep === 2 && (
 				<div className="floating-buttons">
 					<button

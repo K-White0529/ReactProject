@@ -1,25 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { generatePersonalizedAdvice, getLatestAdvice } from '../services/adviceService';
 import type { AdviceData, Advice } from '../services/adviceService';
 import { HiSparkles, HiRefresh, HiClock } from 'react-icons/hi';
+import { useRenderLogger } from '../utils/performanceMonitor';
 import './AdviceCard.css';
 
 interface AdviceCardProps {
 	onNavigateToHistory?: () => void;
 }
 
+// 日付フォーマット関数（純粋関数）
+const formatDate = (dateString: string): string => {
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
+	const diffDays = Math.floor(diffMs / 86400000);
+
+	if (diffMins < 1) return 'たった今';
+	if (diffMins < 60) return `${diffMins}分前`;
+	if (diffHours < 24) return `${diffHours}時間前`;
+	if (diffDays === 1) return '昨日';
+	if (diffDays < 7) return `${diffDays}日前`;
+	
+	return date.toLocaleDateString('ja-JP', {
+		month: 'short',
+		day: 'numeric'
+	});
+};
+
 function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
+	useRenderLogger('AdviceCard');
+	
 	const [advice, setAdvice] = useState<string>('');
 	const [generatedAt, setGeneratedAt] = useState<string>('');
 	const [loading, setLoading] = useState<boolean>(true);
 	const [generating, setGenerating] = useState<boolean>(false);
 	const [error, setError] = useState<string>('');
 
-	useEffect(() => {
-		loadLatestAdvice();
-	}, []);
-
-	const loadLatestAdvice = async () => {
+	// データ読み込み関数をuseCallbackでメモ化
+	const loadLatestAdvice = useCallback(async () => {
 		try {
 			setLoading(true);
 			setError('');
@@ -29,7 +50,6 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 				setAdvice(latestAdvice.advice_text);
 				setGeneratedAt(latestAdvice.created_at);
 			} else {
-				// アドバイスがない場合は空の状態を表示（自動生成しない）
 				setAdvice('');
 				setGeneratedAt('');
 			}
@@ -39,9 +59,14 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
-	const handleGenerateAdvice = async () => {
+	useEffect(() => {
+		loadLatestAdvice();
+	}, [loadLatestAdvice]);
+
+	// アドバイス生成ハンドラーをuseCallbackでメモ化
+	const handleGenerateAdvice = useCallback(async () => {
 		try {
 			setGenerating(true);
 			setError('');
@@ -54,27 +79,12 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 		} finally {
 			setGenerating(false);
 		}
-	};
+	}, []);
 
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return 'たった今';
-		if (diffMins < 60) return `${diffMins}分前`;
-		if (diffHours < 24) return `${diffHours}時間前`;
-		if (diffDays === 1) return '昨日';
-		if (diffDays < 7) return `${diffDays}日前`;
-		
-		return date.toLocaleDateString('ja-JP', {
-			month: 'short',
-			day: 'numeric'
-		});
-	};
+	// フォーマット済み日付をuseMemoでメモ化
+	const formattedDate = useMemo(() => {
+		return generatedAt ? formatDate(generatedAt) : '';
+	}, [generatedAt]);
 
 	if (loading) {
 		return (
@@ -124,11 +134,11 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 						<p className="advice-text">{advice}</p>
 					</div>
 
-					{generatedAt && (
+					{formattedDate && (
 						<div className="advice-footer">
 							<div className="advice-timestamp">
 								<HiClock size={14} />
-								<span>{formatDate(generatedAt)}</span>
+								<span>{formattedDate}</span>
 							</div>
 							{onNavigateToHistory && (
 								<button 
@@ -151,4 +161,4 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 	);
 }
 
-export default AdviceCard;
+export default memo(AdviceCard);

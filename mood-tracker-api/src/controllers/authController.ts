@@ -165,3 +165,84 @@ function generateToken(userId: number, username: string): string {
   const secret = process.env.JWT_SECRET || 'fallback-secret';
   return jwt.sign(payload, secret, { expiresIn: '7d' });
 }
+
+/**
+ * ユーザーを削除（テスト用）
+ * 開発環境のみ有効
+ */
+export async function deleteUser(req: Request, res: Response): Promise<void> {
+  try {
+    // 開発環境のみ実行可能
+    if (process.env.NODE_ENV === 'production') {
+      res.status(403).json({
+        success: false,
+        message: 'この機能は開発環境でのみ使用できます'
+      });
+      return;
+    }
+
+    const { username } = req.params;
+
+    if (!username) {
+      res.status(400).json({
+        success: false,
+        message: 'ユーザー名が必要です'
+      });
+      return;
+    }
+
+    // ユーザーを削除
+    const deleted = await UserModel.deleteByUsername(username);
+
+    if (!deleted) {
+      res.status(404).json({
+        success: false,
+        message: 'ユーザーが見つかりませんでした'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: 'ユーザーを削除しました'
+    });
+  } catch (error) {
+    console.error('ユーザー削除エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'ユーザーの削除に失敗しました'
+    });
+  }
+}
+
+/**
+ * 古いテストユーザーを一括削除（テスト用）
+ * 開発環境のみ有効
+ */
+export async function cleanupTestUsers(req: Request, res: Response): Promise<void> {
+  try {
+    // 開発環境のみ実行可能
+    if (process.env.NODE_ENV === 'production') {
+      res.status(403).json({
+        success: false,
+        message: 'この機能は開発環境でのみ使用できます'
+      });
+      return;
+    }
+
+    // testuserで始まるユーザーを全て削除
+    const deletedCount = await UserModel.deleteTestUsers();
+
+    res.json({
+      success: true,
+      message: `${deletedCount}件のテストユーザーを削除しました`,
+      deletedCount
+    });
+  } catch (error) {
+    console.error('テストユーザー一括削除エラー:', error);
+    res.status(500).json({
+      success: false,
+      message: 'テストユーザーの削除に失敗しました'
+    });
+  }
+}

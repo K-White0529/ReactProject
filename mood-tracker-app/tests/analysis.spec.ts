@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -10,8 +10,8 @@ import {
 
 test.describe("分析結果画面（AnalysisForm）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
 
         // 分析ページに移動
         await navigateTo(page, "分析", "分析結果");
@@ -74,9 +74,9 @@ test.describe("分析結果画面（AnalysisForm）", () => {
         
         // エラーメッセージ、空の状態、または分析結果のいずれかが表示される
         const errorMessage = page.locator(".error-message");
-        const emptyMessage = page.locator("text=データがありません, text=記録がありません");
-        const loadingMessage = page.locator("text=分析中..., text=読み込み中...");
-        const analysisResult = page.locator(".analysis-result, .category-section");
+        const emptyMessage = page.locator("text=/データがありません|記録がありません/");
+        const loadingMessage = page.locator("text=/分析中|読み込み中/");
+        const analysisResult = page.locator(".analysis-result, .category-section").first();
 
         const hasError = await errorMessage.isVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE }).catch(() => false);
         const hasEmpty = await emptyMessage.isVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE }).catch(() => false);

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -10,8 +10,8 @@ import {
 
 test.describe("アドバイス履歴画面（AdviceHistory）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
 
         // アドバイス履歴画面に移動
         await clickAndWait(page, 'button:has-text("アドバイス履歴")');
@@ -54,6 +54,9 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
     });
 
     test("新しいアドバイスを生成できる", async ({ page }) => {
+        // テストタイムアウトを延長
+        test.setTimeout(90000); // 90秒
+        
         // 新しいアドバイス生成ボタンをクリック
         await safeClick(page, 'button:has-text("新しいアドバイスを生成")');
 
@@ -63,10 +66,18 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
             .isVisible({ timeout: 2000 })
             .catch(() => false);
 
-        // アドバイスが生成されるまで待つ（最大40秒）
-        await page.waitForTimeout(TIMEOUTS.AI_GENERATION);
+        // いずれかの状態になるまで待つ（最大60秒）
+        await page.waitForFunction(
+            () => {
+                const hasError = document.querySelector('.error-message');
+                const hasCards = document.querySelectorAll('.advice-item').length > 0;
+                return hasError || hasCards;
+            },
+            { timeout: 60000 }
+        ).catch(() => {
+            // タイムアウトしても続行
+        });
 
-        // エラーメッセージまたは成功状態を確認
         const errorMessage = page.locator(".error-message");
         const adviceCards = page.locator(".advice-item");
         const emptyState = page.locator("text=まだアドバイスの履歴がありません");
@@ -75,7 +86,6 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
         const hasCards = (await adviceCards.count()) > 0;
         const hasEmpty = await emptyState.isVisible().catch(() => false);
 
-        // データがない場合はエラーが表示される可能性がある
         // いずれかの状態になっていればOK
         expect(hasError || hasCards || hasEmpty).toBe(true);
     });
@@ -126,11 +136,10 @@ test.describe("アドバイス履歴画面（AdviceHistory）", () => {
         if (count > 0) {
             const firstCard = adviceCards.first();
 
-            // 日付が表示されることを確認
-            const dateElement = firstCard.locator(
-                ".advice-item-date, text=/\\d{4}/\\d{2}/\\d{2}/"
-            );
-            const hasDate = await dateElement.isVisible().catch(() => false);
+            // 日付パターン（YYYY/MM/DD）が表示されることを確認
+            const datePattern = /\d{4}\/\d{2}\/\d{2}/;
+            const cardText = await firstCard.textContent();
+            const hasDate = cardText ? datePattern.test(cardText) : false;
 
             expect(hasDate).toBe(true);
         } else {

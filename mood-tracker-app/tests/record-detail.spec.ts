@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import {
-    createAndLoginUser,
+    loginAsTestUser,
     TIMEOUTS,
     clickAndWait,
     expectPageTitle,
@@ -9,8 +9,8 @@ import {
 
 test.describe("記録詳細画面（RecordDetail）", () => {
     test.beforeEach(async ({ page }) => {
-        // テスト前に新規ユーザーを作成してログイン
-        await createAndLoginUser(page);
+        // 固定テストユーザーでログイン
+        await loginAsTestUser(page);
     });
 
     test("記録一覧から詳細画面に遷移できる", async ({ page }) => {
@@ -89,7 +89,12 @@ test.describe("記録詳細画面（RecordDetail）", () => {
             await expectPageTitle(page, "記録詳細");
 
             // 記録日時が表示されることを確認
-            await expect(page.locator(".record-datetime, .detail-section")).toBeVisible({
+            await expect(page.locator(".record-datetime").first()).toBeVisible({
+                timeout: TIMEOUTS.ELEMENT_VISIBLE,
+            });
+            
+            // 詳細セクションが表示されることを確認
+            await expect(page.locator(".detail-section").first()).toBeVisible({
                 timeout: TIMEOUTS.ELEMENT_VISIBLE,
             });
         } else {

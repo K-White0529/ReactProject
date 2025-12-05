@@ -1,3 +1,5 @@
+import { useMemo, memo } from 'react';
+import { useRenderLogger } from '../../utils/performanceMonitor';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -29,47 +31,52 @@ interface MoodChartProps {
 }
 
 function MoodChart({ data }: MoodChartProps) {
-  // データは既に時間単位でグループ化されている (dateフィールドが 'MM/DD HH24:00' 形式)
-  const labels = data.map(d => d.date);
-  const emotionScores = data.map(d => d.avg_emotion);
-  const motivationScores = data.map(d => d.avg_motivation);
+  useRenderLogger('MoodChart');
+  
+  // チャートデータをuseMemoでメモ化
+  const chartData = useMemo(() => {
+    const labels = data.map(d => d.date);
+    const emotionScores = data.map(d => d.avg_emotion);
+    const motivationScores = data.map(d => d.avg_motivation);
 
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: '気分',
-        data: emotionScores,
-        borderColor: 'rgb(255, 107, 157)',
-        backgroundColor: 'rgba(255, 107, 157, 0.1)',
-        tension: 0.1,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: 'モチベーション',
-        data: motivationScores,
-        borderColor: 'rgb(180, 167, 214)',
-        backgroundColor: 'rgba(180, 167, 214, 0.1)',
-        tension: 0.1,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      }
-    ]
-  };
+    return {
+      labels,
+      datasets: [
+        {
+          label: '気分',
+          data: emotionScores,
+          borderColor: 'rgb(255, 107, 157)',
+          backgroundColor: 'rgba(255, 107, 157, 0.1)',
+          tension: 0.1,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        },
+        {
+          label: 'モチベーション',
+          data: motivationScores,
+          borderColor: 'rgb(180, 167, 214)',
+          backgroundColor: 'rgba(180, 167, 214, 0.1)',
+          tension: 0.1,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }
+      ]
+    };
+  }, [data]);
 
-  const options: ChartOptions<'line'> = {
+  // オプションをuseMemoでメモ化
+  const options: ChartOptions<'line'> = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index',
+      mode: 'index' as const,
       intersect: false,
     },
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
         labels: {
           usePointStyle: true,
           padding: 15,
@@ -89,7 +96,6 @@ function MoodChart({ data }: MoodChartProps) {
         displayColors: true,
         callbacks: {
           title: (context) => {
-            // 'MM/DD HH:00' 形式で表示
             return context[0].label;
           },
           label: (context) => {
@@ -134,7 +140,7 @@ function MoodChart({ data }: MoodChartProps) {
         }
       }
     }
-  };
+  }), []);
 
   return (
     <div style={{ height: '300px', position: 'relative' }}>
@@ -143,4 +149,4 @@ function MoodChart({ data }: MoodChartProps) {
   );
 }
 
-export default MoodChart;
+export default memo(MoodChart);
