@@ -101,24 +101,41 @@ CREATE TABLE IF NOT EXISTS advice_history (
 -- recordsテーブル
 CREATE INDEX IF NOT EXISTS idx_records_user_id ON records(user_id);
 CREATE INDEX IF NOT EXISTS idx_records_recorded_at ON records(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_records_user_id_recorded_at ON records(user_id, recorded_at DESC);
 
 -- analysis_questionsテーブル
 CREATE INDEX IF NOT EXISTS idx_questions_category_id ON analysis_questions(category_id);
 CREATE INDEX IF NOT EXISTS idx_questions_is_active ON analysis_questions(is_active);
+CREATE INDEX IF NOT EXISTS idx_analysis_questions_category_active ON analysis_questions(category_id, is_active);
 
 -- analysis_answersテーブル
 CREATE INDEX IF NOT EXISTS idx_answers_user_id ON analysis_answers(user_id);
 CREATE INDEX IF NOT EXISTS idx_answers_record_id ON analysis_answers(record_id);
 CREATE INDEX IF NOT EXISTS idx_answers_question_id ON analysis_answers(question_id);
 CREATE INDEX IF NOT EXISTS idx_answers_answered_at ON analysis_answers(answered_at);
+CREATE INDEX IF NOT EXISTS idx_analysis_answers_user_id_answered_at ON analysis_answers(user_id, answered_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analysis_answers_user_question ON analysis_answers(user_id, question_id);
 
 -- weather_dataテーブル
 CREATE INDEX IF NOT EXISTS idx_weather_user_id ON weather_data(user_id);
 CREATE INDEX IF NOT EXISTS idx_weather_recorded_at ON weather_data(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_weather_data_user_id_recorded_at ON weather_data(user_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_weather_data_recorded_at ON weather_data(recorded_at DESC);
 
 -- advice_historyテーブル
 CREATE INDEX IF NOT EXISTS idx_advice_user_id ON advice_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_advice_created_at ON advice_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_advice_history_user_id_created_at ON advice_history(user_id, created_at DESC);
+
+-- ============================================
+-- 統計情報の更新
+-- ============================================
+
+VACUUM ANALYZE records;
+VACUUM ANALYZE analysis_answers;
+VACUUM ANALYZE weather_data;
+VACUUM ANALYZE advice_history;
+VACUUM ANALYZE analysis_questions;
 
 -- ============================================
 -- 初期データ投入
