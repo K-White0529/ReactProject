@@ -3,6 +3,7 @@ import { generatePersonalizedAdvice, getLatestAdvice } from '../services/adviceS
 import type { AdviceData, Advice } from '../services/adviceService';
 import { HiSparkles, HiRefresh, HiClock } from 'react-icons/hi';
 import { useRenderLogger } from '../utils/performanceMonitor';
+import { createSafeTextWithBreaks } from '../utils/sanitize';
 import './AdviceCard.css';
 
 interface AdviceCardProps {
@@ -131,7 +132,7 @@ function AdviceCard({ onNavigateToHistory }: AdviceCardProps) {
 			) : advice ? (
 				<>
 					<div className="advice-content">
-						<p className="advice-text">{advice}</p>
+						<p className="advice-text" dangerouslySetInnerHTML={createSafeTextWithBreaks(advice)} />
 					</div>
 
 					{formattedDate && (
