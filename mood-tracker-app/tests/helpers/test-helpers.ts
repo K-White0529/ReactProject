@@ -237,6 +237,8 @@ export async function createAndLoginUser(page: Page): Promise<{
  * ※ 事前にマイグレーションSQL（007_create_test_user.sql）を実行しておく必要があります
  */
 export async function loginAsTestUser(page: Page): Promise<void> {
+    console.log('[loginAsTestUser] Starting login process...');
+    
     await safeGoto(page, "/");
 
     // ローディングスピナーが消えるまで待つ
@@ -244,25 +246,84 @@ export async function loginAsTestUser(page: Page): Promise<void> {
     await page.waitForTimeout(500);
 
     // ログイン画面が表示されることを確認
+    console.log('[loginAsTestUser] Verifying login page...');
     await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({
         timeout: TIMEOUTS.ELEMENT_VISIBLE
     });
 
     // 固定テストユーザーでログイン
+    console.log('[loginAsTestUser] Filling in credentials...');
     await safeFill(page, 'input[name="username"]', 'test_user');
     await safeFill(page, 'input[name="password"]', 'Test1234!');
 
+    // ネットワークリクエストをリッスン
+    let loginResponse: any = null;
+    page.on('response', response => {
+        if (response.url().includes('/api/auth/login')) {
+            loginResponse = {
+                status: response.status(),
+                url: response.url()
+            };
+            console.log(`[loginAsTestUser] Login API response: ${response.status()}`);
+        }
+    });
+
+    // コンソールエラーをキャプチャ
+    page.on('console', msg => {
+        if (msg.type() === 'error') {
+            console.error('[loginAsTestUser] Browser console error:', msg.text());
+        }
+    });
+
     // ログインボタンをクリック
+    console.log('[loginAsTestUser] Clicking login button...');
     await clickAndWait(page, 'button:has-text("ログイン")');
 
     // ローディングスピナーが消えるのを待つ
-    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {});
+    console.log('[loginAsTestUser] Waiting for loading spinner to disappear...');
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {
+        console.log('[loginAsTestUser] Loading spinner timeout');
+    });
     await page.waitForTimeout(1000); // コンポーネントのマウント待ち
 
+    // 現在の状態をログ
+    const currentUrl = page.url();
+    const currentH1 = await page.locator('h1').first().textContent().catch(() => 'NOT FOUND');
+    console.log(`[loginAsTestUser] Current URL: ${currentUrl}`);
+    console.log(`[loginAsTestUser] Current H1: ${currentH1}`);
+    
+    if (loginResponse) {
+        console.log(`[loginAsTestUser] Login API status: ${loginResponse.status}`);
+    }
+
+    // エラーメッセージがあるか確認
+    const errorMessage = await page.locator('.error-message, .alert-error, [role="alert"]')
+        .first()
+        .textContent()
+        .catch(() => null);
+    if (errorMessage) {
+        console.error(`[loginAsTestUser] Error message displayed: ${errorMessage}`);
+    }
+
     // ダッシュボードに遷移することを確認
-    await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
-    });
+    console.log('[loginAsTestUser] Verifying dashboard...');
+    try {
+        await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
+            timeout: TIMEOUTS.NAVIGATION,
+        });
+        console.log('[loginAsTestUser] Login successful!');
+    } catch (error) {
+        console.error('[loginAsTestUser] Dashboard not visible!');
+        console.error(`[loginAsTestUser] Current URL: ${currentUrl}`);
+        console.error(`[loginAsTestUser] Current H1: ${currentH1}`);
+        console.error(`[loginAsTestUser] Login response: ${loginResponse ? loginResponse.status : 'NO RESPONSE'}`);
+        
+        // ページのHTMLをダンプ（デバッグ用）
+        const bodyHtml = await page.locator('body').innerHTML().catch(() => 'Could not get HTML');
+        console.error('[loginAsTestUser] Page HTML (first 500 chars):', bodyHtml.substring(0, 500));
+        
+        throw error;
+    }
 }
 
 /**

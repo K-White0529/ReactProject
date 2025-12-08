@@ -10,9 +10,13 @@ import analysisRoutes from './routes/analysisRoutes';
 import weatherRoutes from './routes/weatherRoutes';
 import adviceRoutes from './routes/adviceRoutes';
 import securityRoutes from './routes/securityRoutes';
+import rateLimitTestRoutes from './routes/rateLimitTestRoutes';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 
-dotenv.config();
+// テスト環境では.envファイルを読み込まない（既存の環境変数を保持）
+if (process.env.NODE_ENV !== 'test') {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -144,6 +148,11 @@ app.use('/api/records', recordRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/advice', adviceRoutes);
+
+// テスト環境専用ルート
+if (process.env.NODE_ENV === 'test') {
+  app.use('/api/test/rate-limit', rateLimitTestRoutes);
+}
 
 // ===== エラーハンドリング =====
 

@@ -1,6 +1,6 @@
 /**
  * セキュリティ機能のテスト
- * 
+ *
  * このファイルでは以下のセキュリティ機能をテストします:
  * - CSRF保護
  * - レート制限
@@ -167,6 +167,12 @@ describe('Security Tests', () => {
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
+      // ページネーション対応のレスポンス形式
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('pagination');
+      expect(response.body.pagination).toHaveProperty('total');
+      expect(response.body.pagination).toHaveProperty('page');
+      expect(response.body.pagination).toHaveProperty('limit');
     });
   });
 
@@ -208,13 +214,15 @@ describe('Security Tests', () => {
 
       // 記録は作成されるが、SQLインジェクションは実行されない
       expect([200, 201]).toContain(response.status);
-      
+
       // データベースが正常に動作していることを確認
       const getResponse = await request(app)
         .get('/api/records')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(getResponse.status).toBe(200);
+      // ページネーション対応のレスポンス確認
+      expect(getResponse.body).toHaveProperty('pagination');
     });
   });
 
@@ -235,7 +243,7 @@ describe('Security Tests', () => {
     it('XSS攻撃のスクリプトがそのまま保存されることを確認', async () => {
       // バックエンドではサニタイズせず、フロントエンドで処理
       const xssPayload = '<script>alert("XSS")</script>';
-      
+
       const response = await request(app)
         .post('/api/records')
         .set('Authorization', `Bearer ${authToken}`)
@@ -245,16 +253,16 @@ describe('Security Tests', () => {
         });
 
       expect([200, 201]).toContain(response.status);
-      
+
       // 取得して確認
-      const recordId = response.body.record.id;
+      const recordId = response.body.data.id;
       const getResponse = await request(app)
         .get(`/api/records/${recordId}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(getResponse.status).toBe(200);
       // バックエンドでは元のデータが保存される
-      expect(getResponse.body.record.emotion_note).toBe(xssPayload);
+      expect(getResponse.body.data.emotion_note).toBe(xssPayload);
       // フロントエンドでDOMPurifyによりサニタイズされる
     });
   });
