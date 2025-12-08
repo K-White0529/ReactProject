@@ -16,10 +16,13 @@ export const apiLimiter = rateLimit({
   standardHeaders: true, // RateLimit-* ヘッダーを返す
   legacyHeaders: false, // X-RateLimit-* ヘッダーを返さない
   handler: (req: Request, res: Response) => {
+    const resetTime = req.rateLimit?.resetTime;
+    const retryAfter = resetTime ? Math.ceil((resetTime.getTime() - Date.now()) / 1000) : 900;
+    
     res.status(429).json({
       success: false,
       message: 'リクエストが多すぎます。しばらく待ってから再度お試しください。',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000)
+      retryAfter
     });
   }
 });
@@ -41,10 +44,14 @@ export const authLimiter = rateLimit({
   skipSuccessfulRequests: false, // 成功したリクエストもカウント
   handler: (req: Request, res: Response) => {
     console.warn(`[Rate Limit] Auth attempt blocked from IP: ${req.ip}`);
+    
+    const resetTime = req.rateLimit?.resetTime;
+    const retryAfter = resetTime ? Math.ceil((resetTime.getTime() - Date.now()) / 1000) : 900;
+    
     res.status(429).json({
       success: false,
       message: '認証の試行回数が多すぎます。15分後に再度お試しください。',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000)
+      retryAfter
     });
   }
 });
@@ -65,10 +72,14 @@ export const aiLimiter = rateLimit({
   legacyHeaders: false,
   handler: (req: Request, res: Response) => {
     console.warn(`[Rate Limit] AI generation blocked from IP: ${req.ip}`);
+    
+    const resetTime = req.rateLimit?.resetTime;
+    const retryAfter = resetTime ? Math.ceil((resetTime.getTime() - Date.now()) / 1000) : 3600;
+    
     res.status(429).json({
       success: false,
       message: 'AI生成のリクエストが多すぎます。1時間後に再度お試しください。',
-      retryAfter: Math.ceil(req.rateLimit.resetTime! / 1000)
+      retryAfter
     });
   }
 });

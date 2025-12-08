@@ -1,4 +1,4 @@
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, query, param } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 
 /**
@@ -88,7 +88,78 @@ export const recordValidation = [
   body('emotion_note')
     .optional()
     .trim(),
-  body('activities_done')
+];
+
+/**
+ * 分析回答のバリデーションルール
+ */
+export const answersValidation = [
+  body('answers')
+    .isArray({ min: 1 })
+    .withMessage('回答は配列で、最低1つ必要です'),
+  body('answers.*.question_id')
+    .isInt({ min: 1 })
+    .withMessage('質問IDは正の整数である必要があります'),
+  body('answers.*.answer_score')
+    .isInt({ min: 1, max: 10 })
+    .withMessage('回答スコアは1～10の範囲で入力してください'),
+  body('answers.*.record_id')
     .optional()
+    .isInt({ min: 1 })
+    .withMessage('記録IDは正の整数である必要があります')
+];
+
+/**
+ * AI質問生成のバリデーションルール
+ */
+export const generateQuestionsValidation = [
+  body('category_code')
     .trim()
+    .notEmpty()
+    .withMessage('カテゴリコードを入力してください')
+    .isLength({ max: 50 })
+    .withMessage('カテゴリコードは50文字以内で入力してください'),
+  body('count')
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage('生成数は1～10の範囲で入力してください')
+];
+
+/**
+ * クエリパラメータのバリデーション（日数）
+ */
+export const daysQueryValidation = [
+  query('days')
+    .optional()
+    .isInt({ min: 1, max: 365 })
+    .withMessage('日数は1～365の範囲で入力してください')
+];
+
+/**
+ * クエリパラメータのバリデーション（期間）
+ */
+export const periodQueryValidation = [
+  query('period')
+    .optional()
+    .isIn(['7', '30', '90'])
+    .withMessage('期間は7、30、90のいずれかを指定してください')
+];
+
+/**
+ * IDパラメータのバリデーション
+ */
+export const idParamValidation = [
+  param('id')
+    .isInt({ min: 1 })
+    .withMessage('IDは正の整数である必要があります')
+];
+
+/**
+ * 記録数のクエリパラメータバリデーション
+ */
+export const limitQueryValidation = [
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('取得件数は1～100の範囲で入力してください')
 ];

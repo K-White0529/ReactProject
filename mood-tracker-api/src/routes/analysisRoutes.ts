@@ -3,6 +3,7 @@ import { getCategories, getQuestions, saveAnswers, generateQuestions, getCategor
 import { authenticateToken } from '../middleware/auth';
 import { conditionalCsrfProtection } from '../middleware/csrf';
 import { aiLimiter, apiLimiter, readLimiter } from '../middleware/rateLimiter';
+import { answersValidation, generateQuestionsValidation, daysQueryValidation, periodQueryValidation, validate } from '../middleware/validation';
 
 const router = Router();
 
@@ -16,21 +17,21 @@ router.get('/categories', readLimiter, getCategories);
 router.get('/questions', readLimiter, getQuestions);
 
 // POST /api/analysis/answers - 回答保存
-router.post('/answers', apiLimiter, conditionalCsrfProtection, saveAnswers);
+router.post('/answers', apiLimiter, conditionalCsrfProtection, answersValidation, validate, saveAnswers);
 
 // POST /api/analysis/generate - AI質問生成（テスト用）
-router.post('/generate', aiLimiter, conditionalCsrfProtection, generateQuestions);
+router.post('/generate', aiLimiter, conditionalCsrfProtection, generateQuestionsValidation, validate, generateQuestions);
 
 // GET /api/analysis/scores - 観点別平均スコア取得
-router.get('/scores', readLimiter, getCategoryScores);
+router.get('/scores', readLimiter, daysQueryValidation, validate, getCategoryScores);
 
 // GET /api/analysis/trends - 観点別スコア遷移取得
-router.get('/trends', readLimiter, getCategoryTrends);
+router.get('/trends', readLimiter, periodQueryValidation, validate, getCategoryTrends);
 
 // GET /api/analysis/random - ランダムな質問取得（記録入力用）
 router.get('/random', readLimiter, getRandomQuestions);
 
 // GET /api/analysis/analyze - ユーザーデータのAI分析
-router.get('/analyze', aiLimiter, analyzeUserData);
+router.get('/analyze', aiLimiter, daysQueryValidation, validate, analyzeUserData);
 
 export default router;

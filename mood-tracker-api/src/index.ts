@@ -9,6 +9,7 @@ import analysisRoutes from './routes/analysisRoutes';
 import weatherRoutes from './routes/weatherRoutes';
 import adviceRoutes from './routes/adviceRoutes';
 import securityRoutes from './routes/securityRoutes';
+import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -134,34 +135,11 @@ app.use('/api/advice', adviceRoutes);
 
 // ===== エラーハンドリング =====
 
-// 404エラーハンドリング
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'エンドポイントが見つかりません'
-  });
-});
+// 404エラーハンドラー
+app.use(notFoundHandler);
 
 // グローバルエラーハンドラー
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err.message);
-  
-  // CORS エラー
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({
-      success: false,
-      message: 'CORS policy violation'
-    });
-  }
-  
-  // その他のエラー
-  res.status(500).json({
-    success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'サーバーエラーが発生しました' 
-      : err.message
-  });
-});
+app.use(globalErrorHandler);
 
 // ===== サーバー起動 =====
 

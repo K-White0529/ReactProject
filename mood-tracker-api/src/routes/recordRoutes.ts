@@ -9,7 +9,7 @@ import {
   getChartData
 } from '../controllers/recordController';
 import { authenticateToken } from '../middleware/auth';
-import { recordValidation, validate } from '../middleware/validation';
+import { recordValidation, idParamValidation, limitQueryValidation, validate } from '../middleware/validation';
 import { conditionalCsrfProtection } from '../middleware/csrf';
 import { apiLimiter, readLimiter } from '../middleware/rateLimiter';
 
@@ -25,18 +25,18 @@ router.get('/stats', readLimiter, getRecordStats);
 router.get('/chart', readLimiter, getChartData);
 
 // GET /api/records - 記録一覧取得
-router.get('/', readLimiter, getRecords);
+router.get('/', readLimiter, limitQueryValidation, validate, getRecords);
 
 // GET /api/records/:id - 特定の記録取得
-router.get('/:id', readLimiter, getRecordById);
+router.get('/:id', readLimiter, idParamValidation, validate, getRecordById);
 
 // POST /api/records - 記録作成
 router.post('/', apiLimiter, conditionalCsrfProtection, recordValidation, validate, createRecord);
 
 // PUT /api/records/:id - 記録更新
-router.put('/:id', apiLimiter, conditionalCsrfProtection, recordValidation, validate, updateRecord);
+router.put('/:id', apiLimiter, conditionalCsrfProtection, idParamValidation, recordValidation, validate, updateRecord);
 
 // DELETE /api/records/:id - 記録削除
-router.delete('/:id', apiLimiter, conditionalCsrfProtection, deleteRecord);
+router.delete('/:id', apiLimiter, conditionalCsrfProtection, idParamValidation, validate, deleteRecord);
 
 export default router;
