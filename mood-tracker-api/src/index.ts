@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
@@ -57,6 +58,17 @@ app.use(helmet({
 
 // Cookie Parser（CSRF対策で使用）
 app.use(cookieParser());
+
+// gzip圧縮
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  threshold: 1024 // 1KB以上のレスポンスを圧縮
+}));
 
 // CORS設定の強化
 const allowedOrigins = process.env.NODE_ENV === 'production'

@@ -3,6 +3,7 @@ import { getSimpleAdvice, getPersonalizedAdvice, getAdviceHistory } from "../con
 import { authenticateToken } from "../middleware/auth";
 import { aiLimiter, readLimiter } from "../middleware/rateLimiter";
 import { daysQueryValidation, limitQueryValidation, validate } from "../middleware/validation";
+import { cacheMiddleware } from "../middleware/cache";
 
 const router = Router();
 
@@ -16,6 +17,6 @@ router.get("/simple", aiLimiter, getSimpleAdvice);
 router.get("/personalized", aiLimiter, daysQueryValidation, validate, getPersonalizedAdvice);
 
 // GET /api/advice/history - アドバイス履歴取得
-router.get("/history", readLimiter, limitQueryValidation, validate, getAdviceHistory);
+router.get("/history", readLimiter, cacheMiddleware(300), limitQueryValidation, validate, getAdviceHistory);
 
 export default router;

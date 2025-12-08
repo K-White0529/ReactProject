@@ -3,9 +3,11 @@ import { RecordModel } from '../models/Record';
 import { RecordInput } from '../types';
 import { WeatherDataModel } from '../models/WeatherData';
 import { getCurrentWeather } from '../services/weatherService';
+import { parsePaginationParams, createPaginatedResponse, filterFields, parseSortParams } from '../utils/pagination';
+import { clearUserCache } from '../middleware/cache';
 
 /**
- * ユーザーの記録一覧を取得
+ * ユーザーの記録一覧を取得（ページネーション対応）
  */
 export async function getRecords(req: Request, res: Response): Promise<void> {
   try {
@@ -19,13 +21,26 @@ export async function getRecords(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const limit = parseInt(req.query.limit as string) || 100;
-    const records = await RecordModel.findByUserId(userId, limit);
+    // ページネーションパラメータを解析
+    const { limit, offset, page } = parsePaginationParams(req.query);
+    
+    // ソートパラメータを解析
+    const { sortBy, sortOrder } = parseSortParams(req.query);
 
-    res.json({
-      success: true,
-      data: records
-    });
+    // 記録を取得（総数も取得）
+    const [records, total] = await Promise.all([
+      RecordModel.findByUserIdPaginated(userId, limit, offset, sortBy, sortOrder),
+      RecordModel.countByUserId(userId)
+    ]);
+
+    // フィールドフィルターを適用
+    const fields = req.query.fields as string | undefined;
+    const filteredRecords = filterFields(records, fields);
+
+    // ページネーション付きレスポンスを作成
+    const response = createPaginatedResponse(filteredRecords, total, page, limit);
+    
+    res.json(response);
   } catch (error) {
     console.error('記録取得エラー:', error);
     res.status(500).json({
@@ -92,6 +107,9 @@ export async function createRecord(req: Request, res: Response): Promise<void> {
     const recordData: RecordInput = req.body;
     const record = await RecordModel.create(userId, recordData);
 
+    // キャッシュをクリア
+    clearUserCache(userId);
+
     // 気象データを取得して保存（非同期で実行、エラーがあっても記録作成は成功とする）
     getCurrentWeather('Tokyo')
       .then(async (weatherData) => {
@@ -151,6 +169,9 @@ export async function updateRecord(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // キャッシュをクリア
+    clearUserCache(userId);
+
     res.json({
       success: true,
       data: record,
@@ -190,6 +211,9 @@ export async function deleteRecord(req: Request, res: Response): Promise<void> {
       });
       return;
     }
+
+    // キャッシュをクリア
+    clearUserCache(userId);
 
     res.json({
       success: true,

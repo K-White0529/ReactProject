@@ -12,6 +12,7 @@ import { authenticateToken } from '../middleware/auth';
 import { recordValidation, idParamValidation, limitQueryValidation, validate } from '../middleware/validation';
 import { conditionalCsrfProtection } from '../middleware/csrf';
 import { apiLimiter, readLimiter } from '../middleware/rateLimiter';
+import { cacheMiddleware } from '../middleware/cache';
 
 const router = Router();
 
@@ -19,16 +20,16 @@ const router = Router();
 router.use(authenticateToken);
 
 // GET /api/records/stats - 統計情報取得
-router.get('/stats', readLimiter, getRecordStats);
+router.get('/stats', readLimiter, cacheMiddleware(300), getRecordStats);
 
 // GET /api/records/chart - グラフデータ取得
-router.get('/chart', readLimiter, getChartData);
+router.get('/chart', readLimiter, cacheMiddleware(300), getChartData);
 
 // GET /api/records - 記録一覧取得
-router.get('/', readLimiter, limitQueryValidation, validate, getRecords);
+router.get('/', readLimiter, cacheMiddleware(60), limitQueryValidation, validate, getRecords);
 
 // GET /api/records/:id - 特定の記録取得
-router.get('/:id', readLimiter, idParamValidation, validate, getRecordById);
+router.get('/:id', readLimiter, cacheMiddleware(300), idParamValidation, validate, getRecordById);
 
 // POST /api/records - 記録作成
 router.post('/', apiLimiter, conditionalCsrfProtection, recordValidation, validate, createRecord);
