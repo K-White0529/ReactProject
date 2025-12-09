@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import { isAuthenticated } from './services/authService';
+import { fetchCsrfToken } from './services/api';
 import PerformanceReport from './components/PerformanceReport';
 import WebVitalsDashboard from './components/WebVitalsDashboard';
 
@@ -37,6 +38,11 @@ function App() {
 
   useEffect(() => {
     setAuthenticated(isAuthenticated());
+
+    // CSRFトークンを初期化（エラーを無視）
+    fetchCsrfToken().catch((error) => {
+      console.warn('初期CSRFトークン取得失敗:', error);
+    });
   }, []);
 
   const handleLoginSuccess = () => {
@@ -122,7 +128,7 @@ function App() {
           )}
         </Suspense>
       )}
-      
+
       {/* パフォーマンス監視（開発環境のみ） */}
       <PerformanceReport />
       <WebVitalsDashboard />

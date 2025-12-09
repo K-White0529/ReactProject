@@ -2,14 +2,15 @@ import { Router } from 'express';
 import { register, login, getCurrentUser, deleteUser, cleanupTestUsers } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 import { registerValidation, loginValidation, validate } from '../middleware/validation';
+import { authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // POST /api/auth/register - ユーザー登録
-router.post('/register', registerValidation, validate, register);
+router.post('/register', authLimiter, registerValidation, validate, register);
 
 // POST /api/auth/login - ログイン
-router.post('/login', loginValidation, validate, login);
+router.post('/login', authLimiter, loginValidation, validate, login);
 
 // GET /api/auth/me - 現在のユーザー情報取得（認証必要）
 router.get('/me', authenticateToken, getCurrentUser);

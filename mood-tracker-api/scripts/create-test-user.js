@@ -19,7 +19,7 @@ async function createTestUser() {
     console.log('Creating test user...');
     
     const username = 'test_user';
-    const email = 'test@example.com';
+    const email = 'test_user@example.com';
     const password = 'Test1234!';
     
     // パスワードをハッシュ化

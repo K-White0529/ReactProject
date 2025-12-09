@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AnalysisModel } from '../models/Analysis';
 import { generateAnalysisQuestions, analyzeData } from '../services/aiService';
+import { clearUserCache } from '../middleware/cache';
 
 /**
  * 分析観点一覧を取得
@@ -68,6 +69,9 @@ export async function saveAnswers(req: Request, res: Response): Promise<void> {
     }
 
     await AnalysisModel.saveAnswers(userId, answers);
+
+    // キャッシュをクリア
+    clearUserCache(userId);
 
     res.status(201).json({
       success: true,

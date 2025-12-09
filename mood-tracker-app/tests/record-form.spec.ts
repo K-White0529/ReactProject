@@ -129,7 +129,38 @@ test.describe("記録作成画面（RecordForm）", () => {
     });
 
     test("Step6: フォームを送信して記録を作成できる", async ({ page }) => {
+        console.log('[Step6] Starting test...');
+        
+        // ネットワークリクエストをリッスン
+        const requests: any[] = [];
+        page.on('request', request => {
+            if (request.url().includes('/api/')) {
+                requests.push({
+                    url: request.url(),
+                    method: request.method(),
+                });
+                console.log(`[Step6] Request: ${request.method()} ${request.url()}`);
+            }
+        });
+        
+        page.on('response', async response => {
+            if (response.url().includes('/api/')) {
+                const status = response.status();
+                console.log(`[Step6] Response: ${status} ${response.url()}`);
+                if (status >= 400) {
+                    const body = await response.text().catch(() => 'Could not read body');
+                    console.error(`[Step6] Error response body: ${body}`);
+                }
+            }
+        });
+        
+        // コンソールログをキャプチャ
+        page.on('console', msg => {
+            console.log(`[Step6] Browser console [${msg.type()}]: ${msg.text()}`);
+        });
+        
         // Step 1のフォームに入力
+        console.log('[Step6] Filling Step 1 form...');
         await safeFill(page, 'input[id="sleep_hours"]', "7");
         await safeFill(page, 'input[id="sleep_quality"]', "8");
         await safeFill(page, 'input[id="meal_regularity"]', "7");
@@ -142,12 +173,15 @@ test.describe("記録作成画面（RecordForm）", () => {
         await safeFill(page, 'textarea[id="activities_done"]', "ジョギングと読書");
 
         // Step 2に進む
+        console.log('[Step6] Moving to Step 2...');
         await safeClick(page, 'button:has-text("調子分析入力に進む")');
         await expect(page.locator("text=以下の質問に回答してください")).toBeVisible({
             timeout: TIMEOUTS.NAVIGATION,
         });
+        console.log('[Step6] Step 2 loaded');
 
         // 質問に回答（最初の質問のみ）
+        console.log('[Step6] Filling questions...');
         const firstQuestionSlider = page.locator('input[type="range"]').first();
         await firstQuestionSlider.fill("7");
 
@@ -156,12 +190,34 @@ test.describe("記録作成画面（RecordForm）", () => {
         for (const slider of allSliders) {
             await slider.fill("7");
         }
+        console.log(`[Step6] Filled ${allSliders.length} questions`);
 
         // 送信ボタンをクリック
+        console.log('[Step6] Submitting form...');
+        const beforeUrl = page.url();
+        console.log(`[Step6] Current URL before submit: ${beforeUrl}`);
+        
         await clickSubmitButton(page, "記録を保存");
+        
+        console.log('[Step6] Form submitted, waiting for navigation...');
+        await page.waitForTimeout(2000); // 2秒待機
+        
+        const afterUrl = page.url();
+        console.log(`[Step6] Current URL after submit: ${afterUrl}`);
+        
+        const currentH1 = await page.locator('h1').first().textContent().catch(() => 'NOT FOUND');
+        console.log(`[Step6] Current H1: ${currentH1}`);
+        
+        // リクエストログを出力
+        console.log(`[Step6] Total API requests made: ${requests.length}`);
+        requests.forEach((req, i) => {
+            console.log(`[Step6] Request ${i + 1}: ${req.method} ${req.url}`);
+        });
 
         // ダッシュボードに遷移することを確認
+        console.log('[Step6] Verifying dashboard...');
         await expectPageTitle(page, "ダッシュボード", TIMEOUTS.NAVIGATION);
+        console.log('[Step6] Test completed successfully!');
     });
 
     test("Step7: すべてのスライダーが正しく表示され、操作できる", async ({ page }) => {

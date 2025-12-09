@@ -17,6 +17,46 @@ export class RecordModel {
   }
 
   /**
+   * ユーザーの記録をページネーションで取得
+   */
+  static async findByUserIdPaginated(
+    userId: number,
+    limit: number,
+    offset: number,
+    sortBy?: string,
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ): Promise<Record[]> {
+    // ソート対象のカラムを限定（SQLインジェクション対策）
+    const allowedSortColumns = [
+      'recorded_at', 'sleep_hours', 'sleep_quality',
+      'meal_quality', 'meal_regularity', 'exercise_minutes',
+      'exercise_intensity', 'emotion_score', 'motivation_score'
+    ];
+    const orderColumn = sortBy && allowedSortColumns.includes(sortBy) ? sortBy : 'recorded_at';
+    const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    const result = await pool.query(
+      `SELECT * FROM records
+       WHERE user_id = $1
+       ORDER BY ${orderColumn} ${orderDirection}
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+    return result.rows;
+  }
+
+  /**
+   * ユーザーの記録総数を取得
+   */
+  static async countByUserId(userId: number): Promise<number> {
+    const result = await pool.query(
+      'SELECT COUNT(*) as count FROM records WHERE user_id = $1',
+      [userId]
+    );
+    return parseInt(result.rows[0].count, 10);
+  }
+
+  /**
    * IDで記録を取得
    */
   static async findById(id: number, userId: number): Promise<Record | null> {

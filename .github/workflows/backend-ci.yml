@@ -69,6 +69,7 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
+          DISABLE_CSRF: 'true'
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mood_tracker_test
           JWT_SECRET: test-secret-key-for-ci
 
@@ -79,6 +80,7 @@ jobs:
         env:
           CI: true
           NODE_ENV: test
+          DISABLE_CSRF: 'true'
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mood_tracker_test
           JWT_SECRET: test-secret-key-for-ci
 

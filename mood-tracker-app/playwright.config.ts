@@ -16,8 +16,9 @@ export default defineConfig({
   
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'on' : 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: process.env.CI ? 'retain-on-failure' : 'off',
     
     // アクションのタイムアウトを延長（コード分割対応）
     actionTimeout: 15000, // 15秒（コード分割対応）

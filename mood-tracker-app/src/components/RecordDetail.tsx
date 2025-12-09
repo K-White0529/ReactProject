@@ -3,6 +3,7 @@ import { getRecordById } from '../services/recordService';
 import { getWeatherByRecordId } from '../services/weatherService';
 import type { CurrentWeather, Record } from '../types';
 import { HiArrowLeft } from 'react-icons/hi';
+import { createSafeTextWithBreaks } from '../utils/sanitize';
 import './RecordDetail.css';
 
 interface RecordDetailProps {
@@ -233,16 +234,16 @@ function RecordDetail({ recordId, onNavigate }: RecordDetailProps) {
 					<div className="detail-section">
 						<h3>メモ</h3>
 						{record.emotion_note && (
-							<div className="memo-item">
-								<h4>感情のメモ</h4>
-								<p>{record.emotion_note}</p>
-							</div>
+						<div className="memo-item">
+						<h4>感情のメモ</h4>
+						<p dangerouslySetInnerHTML={createSafeTextWithBreaks(record.emotion_note)} />
+						</div>
 						)}
 						{record.activities_done && (
-							<div className="memo-item">
-								<h4>やったこと</h4>
-								<p>{record.activities_done}</p>
-							</div>
+						<div className="memo-item">
+						<h4>やったこと</h4>
+						<p dangerouslySetInnerHTML={createSafeTextWithBreaks(record.activities_done)} />
+						</div>
 						)}
 					</div>
 				)}

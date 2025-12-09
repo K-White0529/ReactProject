@@ -15,9 +15,9 @@ export const TIMEOUTS = {
  * ページに安全に移動する
  */
 export async function safeGoto(page: Page, url: string) {
-    await page.goto(url, { 
+    await page.goto(url, {
         waitUntil: 'networkidle',
-        timeout: TIMEOUTS.PAGE_LOAD 
+        timeout: TIMEOUTS.PAGE_LOAD
     });
     await page.waitForLoadState('domcontentloaded');
 }
@@ -29,51 +29,51 @@ export async function clickAndWait(page: Page, selector: string) {
     // クリック前の状態を記録
     const beforeUrl = page.url();
     const beforeH1 = await page.locator('h1').first().textContent().catch(() => '');
-    
+
     console.log(`[clickAndWait] Before click - URL: ${beforeUrl}, H1: ${beforeH1}`);
     console.log(`[clickAndWait] Clicking selector: ${selector}`);
-    
+
     // Playwright推奨の方法でクリック（auto-waiting付き）
     await page.locator(selector).first().click({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
-    
+
     console.log(`[clickAndWait] Click executed`);
-    
+
     // ナビゲーション完了を待機
     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
         console.log('[clickAndWait] networkidle timeout, continuing...');
     });
-    
+
     // コード分割のためのローディングスピナーが消えるのを待つ
     const loadingSpinner = page.locator('.loading-spinner');
     if (await loadingSpinner.isVisible().catch(() => false)) {
-        await loadingSpinner.waitFor({ 
-            state: 'hidden', 
-            timeout: 5000 
+        await loadingSpinner.waitFor({
+            state: 'hidden',
+            timeout: 5000
         }).catch(() => {
             console.log('[clickAndWait] loading spinner timeout, continuing...');
         });
     }
-    
+
     // URLまたはh1が変化するまでポーリング（SPAナビゲーション検知）
     const startTime = Date.now();
     const pollInterval = 500;
     const maxWaitTime = 10000; // 10秒間ポーリング
-    
+
     let navigationDetected = false;
-    
+
     while (Date.now() - startTime < maxWaitTime) {
         const currentUrl = page.url();
         const currentH1 = await page.locator('h1').first().textContent().catch(() => '');
-        
+
         if (currentUrl !== beforeUrl || currentH1 !== beforeH1) {
             console.log(`[clickAndWait] Navigation detected - URL: ${currentUrl}, H1: ${currentH1}`);
             navigationDetected = true;
             break;
         }
-        
+
         await page.waitForTimeout(pollInterval);
     }
-    
+
     if (!navigationDetected) {
         const currentUrl = page.url();
         const currentH1 = await page.locator('h1').first().textContent().catch(() => '');
@@ -81,7 +81,7 @@ export async function clickAndWait(page: Page, selector: string) {
         console.warn(`[clickAndWait] Before - URL: ${beforeUrl}, H1: ${beforeH1}`);
         console.warn(`[clickAndWait] After  - URL: ${currentUrl}, H1: ${currentH1}`);
     }
-    
+
     // ナビゲーションが発生した場合、コンポーネントマウント待機
     if (navigationDetected) {
         await page.waitForTimeout(2000);
@@ -93,11 +93,11 @@ export async function clickAndWait(page: Page, selector: string) {
  */
 export async function safeFill(page: Page, selector: string, value: string) {
     // 要素が表示されるまで待機
-    await page.waitForSelector(selector, { 
+    await page.waitForSelector(selector, {
         state: 'visible',
-        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+        timeout: TIMEOUTS.ELEMENT_VISIBLE
     });
-    
+
     // 入力
     await page.fill(selector, value);
 }
@@ -120,15 +120,15 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
         `button:text("${buttonText}")`,
         `button[type="submit"]:has-text("${buttonText}")`
     ];
-    
+
     let locator = null;
     let lastError: Error | null = null;
-    
+
     // どのセレクターが機能するか試す
     for (const selector of selectors) {
         try {
             const testLocator = page.locator(selector).first();
-            await testLocator.waitFor({ 
+            await testLocator.waitFor({
                 state: 'visible',
                 timeout: 5000 // 各パターンて5秒
             });
@@ -140,7 +140,7 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
             continue;
         }
     }
-    
+
     // どのセレクターも機能しなかった場合
     if (!locator) {
         console.error(`Button not found with text: "${buttonText}"`);
@@ -148,7 +148,7 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
         console.error('Available buttons:', allButtons);
         throw lastError;
     }
-    
+
     // ボタンが有効になるまで待機（最大5秒）
     let attempts = 0;
     const maxAttempts = 10;
@@ -161,10 +161,10 @@ export async function clickSubmitButton(page: Page, buttonText: string) {
         await page.waitForTimeout(500);
         attempts++;
     }
-    
+
     // クリック
     await locator.click({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
-    
+
     // API呼び出しの完了を待機
     await page.waitForLoadState('networkidle');
 }
@@ -185,18 +185,18 @@ export async function createAndLoginUser(page: Page): Promise<{
     await page.waitForTimeout(500);
 
     // ログイン画面が表示されることを確認
-    await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ 
-        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({
+        timeout: TIMEOUTS.ELEMENT_VISIBLE
     });
 
     // 新規登録画面に移動
     await clickAndWait(page, 'button:has-text("新規登録はこちら")');
-    
+
     // ローディング完了を待つ
     await page.waitForTimeout(500);
-    
-    await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({ 
-        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+
+    await expect(page.locator('h1:has-text("新規登録")')).toBeVisible({
+        timeout: TIMEOUTS.ELEMENT_VISIBLE
     });
 
     // ユーザー情報を作成
@@ -219,14 +219,14 @@ export async function createAndLoginUser(page: Page): Promise<{
 
     // 登録ボタンをクリック
     await clickAndWait(page, 'button:has-text("登録")');
-    
+
     // ローディングスピナーが消えるのを待つ
     await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {});
     await page.waitForTimeout(1000); // コンポーネントのマウント待ち
 
     // ダッシュボードに遷移することを確認
     await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
+        timeout: TIMEOUTS.ELEMENT_VISIBLE,
     });
 
     return userInfo;
@@ -237,6 +237,8 @@ export async function createAndLoginUser(page: Page): Promise<{
  * ※ 事前にマイグレーションSQL（007_create_test_user.sql）を実行しておく必要があります
  */
 export async function loginAsTestUser(page: Page): Promise<void> {
+    console.log('[loginAsTestUser] Starting login process...');
+    
     await safeGoto(page, "/");
 
     // ローディングスピナーが消えるまで待つ
@@ -244,25 +246,84 @@ export async function loginAsTestUser(page: Page): Promise<void> {
     await page.waitForTimeout(500);
 
     // ログイン画面が表示されることを確認
-    await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({ 
-        timeout: TIMEOUTS.ELEMENT_VISIBLE 
+    console.log('[loginAsTestUser] Verifying login page...');
+    await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({
+        timeout: TIMEOUTS.ELEMENT_VISIBLE
     });
 
     // 固定テストユーザーでログイン
+    console.log('[loginAsTestUser] Filling in credentials...');
     await safeFill(page, 'input[name="username"]', 'test_user');
     await safeFill(page, 'input[name="password"]', 'Test1234!');
 
+    // ネットワークリクエストをリッスン
+    let loginResponse: any = null;
+    page.on('response', response => {
+        if (response.url().includes('/api/auth/login')) {
+            loginResponse = {
+                status: response.status(),
+                url: response.url()
+            };
+            console.log(`[loginAsTestUser] Login API response: ${response.status()}`);
+        }
+    });
+
+    // コンソールエラーをキャプチャ
+    page.on('console', msg => {
+        if (msg.type() === 'error') {
+            console.error('[loginAsTestUser] Browser console error:', msg.text());
+        }
+    });
+
     // ログインボタンをクリック
+    console.log('[loginAsTestUser] Clicking login button...');
     await clickAndWait(page, 'button:has-text("ログイン")');
-    
+
     // ローディングスピナーが消えるのを待つ
-    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {});
+    console.log('[loginAsTestUser] Waiting for loading spinner to disappear...');
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 10000 }).catch(() => {
+        console.log('[loginAsTestUser] Loading spinner timeout');
+    });
     await page.waitForTimeout(1000); // コンポーネントのマウント待ち
 
+    // 現在の状態をログ
+    const currentUrl = page.url();
+    const currentH1 = await page.locator('h1').first().textContent().catch(() => 'NOT FOUND');
+    console.log(`[loginAsTestUser] Current URL: ${currentUrl}`);
+    console.log(`[loginAsTestUser] Current H1: ${currentH1}`);
+    
+    if (loginResponse) {
+        console.log(`[loginAsTestUser] Login API status: ${loginResponse.status}`);
+    }
+
+    // エラーメッセージがあるか確認
+    const errorMessage = await page.locator('.error-message, .alert-error, [role="alert"]')
+        .first()
+        .textContent()
+        .catch(() => null);
+    if (errorMessage) {
+        console.error(`[loginAsTestUser] Error message displayed: ${errorMessage}`);
+    }
+
     // ダッシュボードに遷移することを確認
-    await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
-    });
+    console.log('[loginAsTestUser] Verifying dashboard...');
+    try {
+        await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
+            timeout: TIMEOUTS.NAVIGATION,
+        });
+        console.log('[loginAsTestUser] Login successful!');
+    } catch (error) {
+        console.error('[loginAsTestUser] Dashboard not visible!');
+        console.error(`[loginAsTestUser] Current URL: ${currentUrl}`);
+        console.error(`[loginAsTestUser] Current H1: ${currentH1}`);
+        console.error(`[loginAsTestUser] Login response: ${loginResponse ? loginResponse.status : 'NO RESPONSE'}`);
+        
+        // ページのHTMLをダンプ（デバッグ用）
+        const bodyHtml = await page.locator('body').innerHTML().catch(() => 'Could not get HTML');
+        console.error('[loginAsTestUser] Page HTML (first 500 chars):', bodyHtml.substring(0, 500));
+        
+        throw error;
+    }
 }
 
 /**
@@ -287,9 +348,12 @@ export async function loginUser(
     // ログインボタンをクリック
     await clickAndWait(page, 'button:has-text("ログイン")');
 
-    // ダッシュボードに遷移することを確認
+    // ダッシュボードに遷移することを確認（複数セレクタで試行）
+    await waitForDashboard(page);
+
+    // 最終確認: h1要素が表示されることを確認
     await expect(page.locator('h1:has-text("ダッシュボード")')).toBeVisible({
-        timeout: TIMEOUTS.NAVIGATION,
+        timeout: TIMEOUTS.ELEMENT_VISIBLE,
     });
 }
 
@@ -298,7 +362,7 @@ export async function loginUser(
  */
 export async function logout(page: Page) {
     await clickAndWait(page, '.user-menu, button:has-text("ログアウト")');
-    
+
     // ログイン画面に戻ることを確認
     await expect(page.locator('h1:has-text("ログイン")')).toBeVisible({
         timeout: TIMEOUTS.ELEMENT_VISIBLE,
@@ -310,37 +374,37 @@ export async function logout(page: Page) {
  */
 export async function expectPageTitle(page: Page, title: string, timeout?: number) {
     const actualTimeout = timeout || TIMEOUTS.ELEMENT_VISIBLE;
-    
+
     console.log(`[expectPageTitle] Expecting title: "${title}"`);
-    
+
     // ローディングスピナーが表示されている場合は消えるまで待つ
     const loadingSpinner = page.locator('.loading-spinner');
     if (await loadingSpinner.isVisible().catch(() => false)) {
         console.log('[expectPageTitle] Waiting for loading spinner to disappear...');
-        await loadingSpinner.waitFor({ 
-            state: 'hidden', 
-            timeout: 5000 
+        await loadingSpinner.waitFor({
+            state: 'hidden',
+            timeout: 5000
         }).catch(() => {
             console.log('[expectPageTitle] Loading spinner timeout');
         });
     }
-    
+
     // 初期待機（コンポーネントマウント開始）
     await page.waitForTimeout(1000);
-    
+
     // h1要素のテキストが期待値になるまでポーリング（最も確実な方法）
     const startTime = Date.now();
     const pollInterval = 500; // 500msごとにチェック
     let attemptCount = 0;
-    
+
     while (Date.now() - startTime < actualTimeout) {
         attemptCount++;
         const h1Text = await page.locator('h1').first().textContent({ timeout: 1000 }).catch(() => '');
-        
+
         if (attemptCount <= 3 || attemptCount % 10 === 0) {
             console.log(`[expectPageTitle] Attempt ${attemptCount}: Current h1 = "${h1Text?.trim()}"`);
         }
-        
+
         if (h1Text?.trim() === title) {
             // 成功：期待値と一致
             console.log(`[expectPageTitle] SUCCESS: Title matched after ${Date.now() - startTime}ms`);
@@ -348,11 +412,11 @@ export async function expectPageTitle(page: Page, title: string, timeout?: numbe
             await page.waitForTimeout(500);
             return;
         }
-        
+
         // まだ一致しない場合は、次のポーリングまで待機
         await page.waitForTimeout(pollInterval);
     }
-    
+
     // タイムアウト：最終確認してエラーを投げる
     const finalH1Text = await page.locator('h1').first().textContent({ timeout: 1000 }).catch(() => '');
     console.error(`[expectPageTitle] TIMEOUT: Expected "${title}" but got "${finalH1Text?.trim()}" after ${actualTimeout}ms`);

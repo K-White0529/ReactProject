@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { analyzeUserData, type AnalysisResponse, type AnalysisTrend } from '../services/analysisService';
 import { HiArrowLeft, HiTrendingUp, HiTrendingDown, HiMinus, HiLightBulb, HiChartBar } from 'react-icons/hi';
+import { createSafeTextWithBreaks } from '../utils/sanitize';
 import './AnalysisResult.css';
 
 interface AnalysisResultProps {
@@ -160,7 +161,7 @@ function AnalysisResult({ onNavigate }: AnalysisResultProps) {
 					<HiChartBar size={24} />
 					全体の状態
 				</h2>
-				<p className="summary-text">{analysisData.analysis.summary}</p>
+				<p className="summary-text" dangerouslySetInnerHTML={createSafeTextWithBreaks(analysisData.analysis.summary)} />
 			</div>
 
 			{/* トレンドセクション */}
@@ -178,7 +179,7 @@ function AnalysisResult({ onNavigate }: AnalysisResultProps) {
 								<span>{getTrendLabel(analysisData.analysis.trends.emotion.trend)}</span>
 							</div>
 						</div>
-						<p className="trend-description">{analysisData.analysis.trends.emotion.description}</p>
+						<p className="trend-description" dangerouslySetInnerHTML={createSafeTextWithBreaks(analysisData.analysis.trends.emotion.description)} />
 					</div>
 					<div className="trend-item">
 						<div className="trend-header">
@@ -188,7 +189,7 @@ function AnalysisResult({ onNavigate }: AnalysisResultProps) {
 								<span>{getTrendLabel(analysisData.analysis.trends.motivation.trend)}</span>
 							</div>
 						</div>
-						<p className="trend-description">{analysisData.analysis.trends.motivation.description}</p>
+						<p className="trend-description" dangerouslySetInnerHTML={createSafeTextWithBreaks(analysisData.analysis.trends.motivation.description)} />
 					</div>
 				</div>
 			</div>
@@ -204,7 +205,7 @@ function AnalysisResult({ onNavigate }: AnalysisResultProps) {
 						{analysisData.analysis.correlations.map((correlation, index) => (
 							<li key={index} className="correlation-item">
 								<span className="correlation-bullet">•</span>
-								<span>{correlation}</span>
+								<span dangerouslySetInnerHTML={createSafeTextWithBreaks(correlation)} />
 							</li>
 						))}
 					</ul>
@@ -222,7 +223,7 @@ function AnalysisResult({ onNavigate }: AnalysisResultProps) {
 						{analysisData.analysis.recommendations.map((recommendation, index) => (
 							<li key={index} className="recommendation-item">
 								<div className="recommendation-number">{index + 1}</div>
-								<span>{recommendation}</span>
+								<span dangerouslySetInnerHTML={createSafeTextWithBreaks(recommendation)} />
 							</li>
 						))}
 					</ul>
