@@ -11,13 +11,24 @@ export function AccessControl({ children }: AccessControlProps) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // CI環境またはアクセス制御が無効化されている場合はスキップ
+  const isAccessControlEnabled = import.meta.env.VITE_ACCESS_PASSWORD && 
+                                  import.meta.env.VITE_ENABLE_ACCESS_CONTROL !== 'false';
+
   useEffect(() => {
+    // アクセス制御が無効の場合は常に認証済みとする
+    if (!isAccessControlEnabled) {
+      setIsAuthorized(true);
+      setIsLoading(false);
+      return;
+    }
+
     const auth = sessionStorage.getItem('app_authorized');
     if (auth === 'true') {
       setIsAuthorized(true);
     }
     setIsLoading(false);
-  }, []);
+  }, [isAccessControlEnabled]);
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
