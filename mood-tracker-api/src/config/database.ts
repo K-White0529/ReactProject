@@ -30,13 +30,15 @@ pool.on('error', (err) => {
   console.error('データベース接続エラー:', err);
 });
 
-// 起動時に接続確認
-pool.query('SELECT NOW()')
-  .then(() => {
-    console.log('Database connected successfully');
-  })
-  .catch((err) => {
-    console.error('Database connection failed:', err);
-  });
+// 起動時に接続確認（テスト環境ではスキップ）
+if (process.env.NODE_ENV !== 'test') {
+  pool.query('SELECT NOW()')
+    .then(() => {
+      console.log('Database connected successfully');
+    })
+    .catch((err) => {
+      console.error('Database connection failed:', err);
+    });
+}
 
 export default pool;
