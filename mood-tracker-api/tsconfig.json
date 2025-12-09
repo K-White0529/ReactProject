@@ -11,19 +11,22 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["node"],
+    "types": ["node", "express"],
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src/**/*", "src/types/**/*"],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.test.ts",
+    "**/__tests__/**",
+    "src/__tests__"
   ],
   "ts-node": {
     "files": true,
     "transpileOnly": false,
     "compilerOptions": {
-      "types": ["node"],
+      "types": ["node", "jest"],
       "typeRoots": ["./node_modules/@types", "./src/types"]
     }
   }
