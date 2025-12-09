@@ -3,9 +3,10 @@
  *
  * このファイルでは以下のセキュリティ機能をテストします:
  * - CSRF保護
- * - レート制限
  * - 入力バリデーション
  * - 認証とアクセス制御
+ * 
+ * 注: レート制限のテストは rate-limiter.test.ts で実施しています
  */
 
 import request from 'supertest';
@@ -41,28 +42,6 @@ describe('Security Tests', () => {
     });
   });
 
-  describe('Rate Limiting', () => {
-    it('認証エンドポイントのレート制限が機能する', async () => {
-      // 6回連続でログインを試行（制限は5回/15分）
-      const requests = Array(6).fill(null).map(() =>
-        request(app)
-          .post('/api/auth/login')
-          .send({
-            username: 'testuser',
-            password: 'wrongpassword'
-          })
-      );
-
-      const responses = await Promise.all(requests);
-
-      // 最後のリクエストは429（Too Many Requests）を返すべき
-      const lastResponse = responses[responses.length - 1];
-      expect(lastResponse.status).toBe(429);
-      expect(lastResponse.body).toHaveProperty('success', false);
-      expect(lastResponse.body.message).toContain('試行回数が多すぎます');
-    }, 30000); // タイムアウトを30秒に延長
-  });
-
   describe('Input Validation', () => {
     let authToken: string;
 
@@ -75,7 +54,7 @@ describe('Security Tests', () => {
           password: 'Test1234!'
         });
 
-      authToken = loginResponse.body.token;
+      authToken = loginResponse.body.data.token;
     });
 
     it('無効なメールアドレスでの登録は失敗する', async () => {
@@ -159,7 +138,7 @@ describe('Security Tests', () => {
           password: 'Test1234!'
         });
 
-      const token = loginResponse.body.token;
+      const token = loginResponse.body.data.token;
 
       const response = await request(app)
         .get('/api/records')
@@ -187,7 +166,7 @@ describe('Security Tests', () => {
           password: 'Test1234!'
         });
 
-      authToken = loginResponse.body.token;
+      authToken = loginResponse.body.data.token;
     });
 
     it('SQLインジェクション攻撃を防ぐ（ユーザー名）', async () => {
@@ -237,7 +216,7 @@ describe('Security Tests', () => {
           password: 'Test1234!'
         });
 
-      authToken = loginResponse.body.token;
+      authToken = loginResponse.body.data.token;
     });
 
     it('XSS攻撃のスクリプトがそのまま保存されることを確認', async () => {

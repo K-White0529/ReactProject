@@ -111,22 +111,25 @@ export async function createRecord(req: Request, res: Response): Promise<void> {
     clearUserCache(userId);
 
     // 気象データを取得して保存（非同期で実行、エラーがあっても記録作成は成功とする）
-    getCurrentWeather('Tokyo')
-      .then(async (weatherData) => {
-        if (weatherData) {
-          await WeatherDataModel.create(
-            userId,
-            weatherData.temperature,
-            weatherData.humidity,
-            weatherData.weatherCondition,
-            weatherData.location
-          );
-          console.log('Weather data saved successfully');
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to save weather data:', error);
-      });
+    // テスト環境ではスキップ
+    if (process.env.NODE_ENV !== 'test') {
+      getCurrentWeather('Tokyo')
+        .then(async (weatherData) => {
+          if (weatherData) {
+            await WeatherDataModel.create(
+              userId,
+              weatherData.temperature,
+              weatherData.humidity,
+              weatherData.weatherCondition,
+              weatherData.location
+            );
+            console.log('Weather data saved successfully');
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to save weather data:', error);
+        });
+    }
 
     res.status(201).json({
       success: true,

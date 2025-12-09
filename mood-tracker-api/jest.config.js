@@ -1,10 +1,12 @@
 // テスト環境の環境変数を最初に設定（最も重要）
 process.env.NODE_ENV = 'test';
 process.env.DISABLE_CSRF = 'true';
+process.env.CI = 'true';
 
 console.log('[Jest Config] Setting up test environment');
 console.log('[Jest Config] NODE_ENV:', process.env.NODE_ENV);
 console.log('[Jest Config] DISABLE_CSRF:', process.env.DISABLE_CSRF);
+console.log('[Jest Config] CI:', process.env.CI);
 
 module.exports = {
   preset: 'ts-jest',
@@ -40,6 +42,9 @@ module.exports = {
       }
     }]
   },
+  // setupFiles: テストフレームワークのセットアップ前に実行（最も早い）
+  setupFiles: ['<rootDir>/src/__tests__/setup-env.ts'],
+  // setupFilesAfterEnv: テストフレームワークのセットアップ後に実行
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   // テストタイムアウトを延長
   testTimeout: 30000,
@@ -47,7 +52,8 @@ module.exports = {
   globals: {
     'process.env': {
       NODE_ENV: 'test',
-      DISABLE_CSRF: 'true'
+      DISABLE_CSRF: 'true',
+      CI: 'true'
     }
   }
 };

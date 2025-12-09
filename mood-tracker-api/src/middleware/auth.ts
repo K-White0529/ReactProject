@@ -40,7 +40,7 @@ export function authenticateToken(
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({
+    res.status(401).json({
       success: false,
       message: '無効なトークンです'
     });

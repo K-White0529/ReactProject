@@ -33,6 +33,7 @@ function generateCacheKey(req: Request): string {
  * キャッシュミドルウェア
  * 
  * GETリクエストのレスポンスをキャッシュする
+ * 成功レスポンス（2xx）のみをキャッシュ
  */
 export function cacheMiddleware(ttl: number = 300) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -45,8 +46,9 @@ export function cacheMiddleware(ttl: number = 300) {
     const cachedResponse = cache.get(key);
 
     if (cachedResponse) {
+      const { statusCode, body } = cachedResponse as { statusCode: number; body: any };
       console.log(`[Cache] Hit: ${key}`);
-      res.json(cachedResponse);
+      res.status(statusCode).json(body);
       return;
     }
 
@@ -55,9 +57,14 @@ export function cacheMiddleware(ttl: number = 300) {
 
     // res.jsonをオーバーライド
     res.json = function(body: any) {
-      // キャッシュに保存
-      cache.set(key, body, ttl);
-      console.log(`[Cache] Set: ${key} (TTL: ${ttl}s)`);
+      // 成功レスポンス（2xx）のみキャッシュ
+      const statusCode = res.statusCode || 200;
+      if (statusCode >= 200 && statusCode < 300) {
+        cache.set(key, { statusCode, body }, ttl);
+        console.log(`[Cache] Set: ${key} (TTL: ${ttl}s, Status: ${statusCode})`);
+      } else {
+        console.log(`[Cache] Skip: ${key} (Status: ${statusCode})`);
+      }
       
       // オリジナルのres.jsonを呼び出し
       return originalJson(body);

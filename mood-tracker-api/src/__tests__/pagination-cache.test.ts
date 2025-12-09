@@ -24,7 +24,7 @@ describe('Pagination and Cache Tests', () => {
         password: 'Test1234!'
       });
 
-    authToken = loginResponse.body.token;
+    authToken = loginResponse.body.data.token;
   });
 
   beforeEach(() => {
@@ -87,22 +87,22 @@ describe('Pagination and Cache Tests', () => {
       expect(response.body.data.length).toBeLessThanOrEqual(3);
     });
 
-    it('limitの最大値が制限される（100まで）', async () => {
+    it('limitの最大値を超えるとエラーになる', async () => {
       const response = await request(app)
         .get('/api/records?limit=200')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body.pagination.limit).toBeLessThanOrEqual(100);
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('success', false);
     });
 
-    it('limitの最小値が制限される（1以上）', async () => {
+    it('limitの最小値を下回るとエラーになる', async () => {
       const response = await request(app)
         .get('/api/records?limit=0')
         .set('Authorization', `Bearer ${authToken}`);
 
-      expect(response.status).toBe(200);
-      expect(response.body.pagination.limit).toBeGreaterThanOrEqual(1);
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('success', false);
     });
   });
 

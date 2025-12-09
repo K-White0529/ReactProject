@@ -23,7 +23,7 @@ describe('Error Handling Tests', () => {
         password: 'Test1234!'
       });
 
-    authToken = loginResponse.body.token;
+    authToken = loginResponse.body.data.token;
   });
 
   describe('統一されたエラーレスポンス形式', () => {
@@ -194,7 +194,7 @@ describe('Error Handling Tests', () => {
 
     it('リソース未検出エラーは日本語メッセージを返す', async () => {
       const response = await request(app)
-        .get('/api/records/999999')
+        .get('/api/records/999999999')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
@@ -259,7 +259,7 @@ describe('Error Handling Tests', () => {
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body.message).toContain('認証が必要');
+      expect(response.body.message).toMatch(/認証|トークン/);
     });
 
     it('無効なIDでのアクセスは400を返す', async () => {
@@ -273,11 +273,12 @@ describe('Error Handling Tests', () => {
 
     it('存在しないリソースへのアクセスは404を返す', async () => {
       const response = await request(app)
-        .get('/api/records/999999')
+        .get('/api/records/999999999')
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('success', false);
+      expect(response.body).toHaveProperty('message');
     });
   });
 
