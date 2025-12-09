@@ -4,6 +4,7 @@ import { isAuthenticated } from './services/authService';
 import { fetchCsrfToken } from './services/api';
 import PerformanceReport from './components/PerformanceReport';
 import WebVitalsDashboard from './components/WebVitalsDashboard';
+import { AccessControl } from './components/auth/AccessControl';
 
 // ローディングコンポーネント
 const LoadingSpinner = () => (
@@ -100,39 +101,41 @@ function App() {
   };
 
   return (
-    <div className="App">
-      {authenticated ? (
-        <Suspense fallback={<LoadingSpinner />}>
-          <Layout
-            onLogout={handleLogout}
-            currentPage={currentPage}
-            onNavigate={handleNavigate}
-          >
-            <Suspense fallback={<LoadingSpinner />}>
-              {renderPage()}
-            </Suspense>
-          </Layout>
-        </Suspense>
-      ) : (
-        <Suspense fallback={<LoadingSpinner />}>
-          {showRegister ? (
-            <Register
-              onRegisterSuccess={handleLoginSuccess}
-              onSwitchToLogin={handleSwitchToLogin}
-            />
-          ) : (
-            <Login
-              onLoginSuccess={handleLoginSuccess}
-              onSwitchToRegister={handleSwitchToRegister}
-            />
-          )}
-        </Suspense>
-      )}
+    <AccessControl>
+      <div className="App">
+        {authenticated ? (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Layout
+              onLogout={handleLogout}
+              currentPage={currentPage}
+              onNavigate={handleNavigate}
+            >
+              <Suspense fallback={<LoadingSpinner />}>
+                {renderPage()}
+              </Suspense>
+            </Layout>
+          </Suspense>
+        ) : (
+          <Suspense fallback={<LoadingSpinner />}>
+            {showRegister ? (
+              <Register
+                onRegisterSuccess={handleLoginSuccess}
+                onSwitchToLogin={handleSwitchToLogin}
+              />
+            ) : (
+              <Login
+                onLoginSuccess={handleLoginSuccess}
+                onSwitchToRegister={handleSwitchToRegister}
+              />
+            )}
+          </Suspense>
+        )}
 
-      {/* パフォーマンス監視（開発環境のみ） */}
-      <PerformanceReport />
-      <WebVitalsDashboard />
-    </div>
+        {/* パフォーマンス監視（開発環境のみ） */}
+        <PerformanceReport />
+        <WebVitalsDashboard />
+      </div>
+    </AccessControl>
   );
 }
 
