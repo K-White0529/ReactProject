@@ -61,6 +61,7 @@ jobs:
         run: npm run test:unit
         env:
           CI: true
+          VITE_ENABLE_ACCESS_CONTROL: 'false'
 
       # バックエンドのセットアップ（E2Eテスト用）
       - name: Install backend dependencies
@@ -182,6 +183,7 @@ jobs:
         env:
           CI: true
           VITE_API_URL: http://localhost:3000
+          VITE_ENABLE_ACCESS_CONTROL: 'false'
 
       # テスト失敗時にバックエンドの状態を確認
       - name: Check backend status after tests
@@ -256,6 +258,7 @@ jobs:
         run: npm run build
         env:
           CI: true
+          VITE_ENABLE_ACCESS_CONTROL: 'false'
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
