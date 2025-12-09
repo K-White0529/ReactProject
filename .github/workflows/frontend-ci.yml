@@ -124,6 +124,53 @@ jobs:
           cat mood-tracker-api/backend.log || echo "Could not read logs"
           exit 1
 
+      # バックエンドAPIのテスト
+      - name: Test backend API endpoints
+        run: |
+          echo "Testing login endpoint..."
+          LOGIN_RESPONSE=$(curl -s -X POST http://localhost:3000/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"test_user","password":"Test1234!"}')
+          echo "Login response: $LOGIN_RESPONSE"
+          
+          # トークンを抽出
+          TOKEN=$(echo $LOGIN_RESPONSE | jq -r '.data.token')
+          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+            echo "ERROR: Failed to get token from login response"
+            echo "Full response: $LOGIN_RESPONSE"
+            exit 1
+          fi
+          echo "Token obtained: ${TOKEN:0:20}..."
+          
+          echo "Testing record creation..."
+          RECORD_RESPONSE=$(curl -s -X POST http://localhost:3000/api/records \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -d '{
+              "sleep_hours": 7,
+              "sleep_quality": 8,
+              "meal_regularity": 7,
+              "meal_quality": 8,
+              "exercise_minutes": 30,
+              "exercise_intensity": 6,
+              "emotion_score": 8,
+              "emotion_note": "Test note",
+              "motivation_score": 7,
+              "activities_done": "Test activity"
+            }')
+          echo "Record creation response: $RECORD_RESPONSE"
+          
+          # レスポンスのステータスを確認
+          RECORD_SUCCESS=$(echo $RECORD_RESPONSE | jq -r '.success')
+          if [ "$RECORD_SUCCESS" != "true" ]; then
+            echo "ERROR: Record creation failed"
+            echo "Full response: $RECORD_RESPONSE"
+            echo "Backend logs:"
+            tail -50 mood-tracker-api/backend.log
+            exit 1
+          fi
+          echo "Backend API test passed!"
+
       # E2Eテストの実行
       - name: Install Playwright browsers
         working-directory: mood-tracker-app
@@ -156,6 +203,15 @@ jobs:
         with:
           name: playwright-report
           path: mood-tracker-app/playwright-report/
+          retention-days: 30
+
+      # トレースのアーティファクト保存
+      - name: Upload trace files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: mood-tracker-app/test-results/**/trace.zip
           retention-days: 30
 
       # スクリーンショットのアーティファクト保存
