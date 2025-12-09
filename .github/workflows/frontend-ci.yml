@@ -91,6 +91,8 @@ jobs:
           echo "Backend PID: $(cat backend.pid)"
         env:
           NODE_ENV: test
+          CI: true
+          DISABLE_CSRF: 'true'
           PORT: 3000
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mood_tracker_test
           JWT_SECRET: test-secret-key-for-ci
@@ -104,13 +106,22 @@ jobs:
           for i in {1..30}; do
             if curl -f http://localhost:3000 > /dev/null 2>&1; then
               echo "Backend API is ready!"
-              curl http://localhost:3000
+              echo "Testing health endpoint..."
+              curl -v http://localhost:3000/api/health || echo "Health endpoint not available"
+              echo "Backend logs (last 50 lines):"
+              tail -50 mood-tracker-api/backend.log || echo "Could not read logs"
               exit 0
             fi
             echo "Attempt $i: Backend not ready yet, waiting..."
+            if [ -f mood-tracker-api/backend.log ]; then
+              echo "Current backend logs:"
+              tail -20 mood-tracker-api/backend.log
+            fi
             sleep 2
           done
           echo "Backend API failed to start"
+          echo "Final backend logs:"
+          cat mood-tracker-api/backend.log || echo "Could not read logs"
           exit 1
 
       # E2Eテストの実行
@@ -124,6 +135,19 @@ jobs:
         env:
           CI: true
           VITE_API_URL: http://localhost:3000
+
+      # テスト失敗時にバックエンドの状態を確認
+      - name: Check backend status after tests
+        if: failure()
+        run: |
+          echo "Checking backend status..."
+          if ps -p $(cat mood-tracker-api/backend.pid) > /dev/null 2>&1; then
+            echo "Backend is still running"
+          else
+            echo "Backend has stopped!"
+          fi
+          echo "Backend logs (last 100 lines):"
+          tail -100 mood-tracker-api/backend.log || echo "Could not read logs"
 
       # テスト結果のアーティファクト保存
       - name: Upload test results
